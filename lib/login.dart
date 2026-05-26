@@ -50,14 +50,14 @@ class _LoginState extends State<Login> {
                   text: "Masuk",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: AppColors.primaryBrown,
+                    color: AppColors.borderBrown,
                     fontSize: 16,
                   ),
                   children: <TextSpan>[
                     TextSpan(
                       text: " dan lanjutkan progres belajarmu.",
                       style: TextStyle(
-                        color: AppColors.primaryBrown,
+                        color: AppColors.borderBrown,
                         fontSize: 16,
                         fontWeight: FontWeight.normal,
                       ),
@@ -113,7 +113,7 @@ class _LoginState extends State<Login> {
                     "Belum punya akun? ",
                     style: TextStyle(
                       fontWeight: FontWeight.normal,
-                      color: AppColors.primaryBrown,
+                      color: AppColors.borderBrown,
                       fontSize: 16,
                     ),
                   ),

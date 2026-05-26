@@ -29,7 +29,7 @@ class _TextFieldComponentState extends State<TextFieldComponent> {
 
       decoration: InputDecoration(
         prefixIcon: Icon(widget.icon),
-        prefixIconColor: AppColors.primaryBrown,
+        prefixIconColor: AppColors.borderBrown,
 
         hintText: widget.hinttext,
         hintStyle: TextStyle(color: const Color(0xFF626566), fontSize: 14),
@@ -41,7 +41,7 @@ class _TextFieldComponentState extends State<TextFieldComponent> {
                   obsecure
                       ? Icons.visibility_off_outlined
                       : Icons.visibility_outlined,
-                  color: AppColors.primaryBrown,
+                  color: AppColors.borderBrown,
                 ),
                 onPressed: () {
                   setState(() {
@@ -61,19 +61,19 @@ class _TextFieldComponentState extends State<TextFieldComponent> {
         // border normal
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primaryBrown, width: 1),
+          borderSide: BorderSide(color: AppColors.borderBrown, width: 1),
         ),
 
         // border saat belum fokus
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primaryBrown, width: 1),
+          borderSide: BorderSide(color: AppColors.borderBrown, width: 1),
         ),
 
         // border saat diklik/focus
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primaryBrown, width: 2),
+          borderSide: BorderSide(color: AppColors.borderBrown, width: 2),
         ),
 
         // border saat input salah
@@ -129,3 +129,65 @@ class _ButtonComponentState extends State<ButtonComponent> {
     );
   }
 }
+
+// APPBAR
+class DeebeeAppbar extends StatelessWidget implements PreferredSizeWidget {
+  const DeebeeAppbar({super.key, required this.isGameplay});
+
+  final bool isGameplay;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      backgroundColor: AppColors.background,
+      leading: isGameplay
+          ? IconButton(onPressed: () {}, icon: Icon(Icons.menu))
+          : null,
+      title: Row(
+        children: [
+          Image.asset(
+            "assets/images/logodb-transparan.png",
+            width: 32,
+            height: 32,
+          ),
+          SizedBox(width: 8),
+          Text(
+            "DeeBee",
+            style: TextStyle(
+              fontFamily: 'Fredoka',
+              fontWeight: FontWeight.w600,
+              fontSize: 28,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          margin: EdgeInsets.only(right: 12),
+          decoration: BoxDecoration(
+            color: AppColors.primaryCream,
+            borderRadius: BorderRadius.circular(9999),
+            border: Border.all(color: AppColors.borderLightBrown),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text("1000 XP", style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(width: 8),
+              CircleAvatar(
+                radius: 15,
+                backgroundImage: AssetImage("assets/images/User Avatar.png"),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+}
+
+// COMPONENT LAIN LAGI

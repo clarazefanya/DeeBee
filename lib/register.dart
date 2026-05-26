@@ -60,7 +60,7 @@ class _RegisterState extends State<Register> {
                   text: "Daftar",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: AppColors.primaryBrown,
+                    color: AppColors.borderBrown,
                     fontSize: 16,
                   ),
                   children: <TextSpan>[
@@ -68,7 +68,7 @@ class _RegisterState extends State<Register> {
                       text:
                           " sebagai pegawai baru dan mulai petualangan SQL-mu.",
                       style: TextStyle(
-                        color: AppColors.primaryBrown,
+                        color: AppColors.borderBrown,
                         fontSize: 16,
                         fontWeight: FontWeight.normal,
                       ),
@@ -191,7 +191,7 @@ class _RegisterState extends State<Register> {
                     "Sudah punya akun? ",
                     style: TextStyle(
                       fontWeight: FontWeight.normal,
-                      color: AppColors.primaryBrown,
+                      color: AppColors.borderBrown,
                       fontSize: 16,
                     ),
                   ),

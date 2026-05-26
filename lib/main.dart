@@ -1,4 +1,4 @@
-import 'package:deebee_user/login.dart';
+import 'package:deebee_user/home.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: Login(),
+      home: Home(),
     );
   }
 }
