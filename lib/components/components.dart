@@ -1,27 +1,60 @@
 import 'package:deebee_user/constants/colors.dart';
 import 'package:flutter/material.dart';
 
-//textformfield login register
-class TextFieldComponent extends StatelessWidget {
+// TEXTFORMFIELD LOGIN REGISTER
+class TextFieldComponent extends StatefulWidget {
   final IconData icon;
   final String hinttext;
+  final bool isPassword; //untuk password
 
   const TextFieldComponent({
     super.key,
     required this.icon,
     required this.hinttext,
+    this.isPassword = false, //optional hanya utk password
   });
+
+  @override
+  State<TextFieldComponent> createState() => _TextFieldComponentState();
+}
+
+class _TextFieldComponentState extends State<TextFieldComponent> {
+  //obsecure text utk password
+  bool obsecure = true;
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      obscureText: widget.isPassword ? obsecure : false,
+
       decoration: InputDecoration(
-        prefixIcon: Icon(icon),
+        prefixIcon: Icon(widget.icon),
         prefixIconColor: AppColors.primaryBrown,
 
-        hintText: hinttext,
+        hintText: widget.hinttext,
         hintStyle: TextStyle(color: const Color(0xFF626566), fontSize: 14),
 
+        //icon hide/show utk password. Jika isPassword true, return icon
+        suffixIcon: widget.isPassword
+            ? IconButton(
+                icon: Icon(
+                  obsecure
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                  color: AppColors.primaryBrown,
+                ),
+                onPressed: () {
+                  setState(() {
+                    obsecure = !obsecure;
+                  });
+                },
+              )
+            : null,
+
+        // tinggi textfield (padding hintext)
+        // contentPadding: EdgeInsets.symmetric(vertical: 17),
+
+        // warna background textfield
         filled: true,
         fillColor: Color(0xFFFFFFFF),
 
@@ -53,34 +86,44 @@ class TextFieldComponent extends StatelessWidget {
   }
 }
 
-//yellow button full
-class ButtonFullComponent extends StatelessWidget {
+// BUTTON
+class ButtonComponent extends StatefulWidget {
   final String text;
+  final Color bgcolor;
   // final VoidCallback onPressed;
 
-  const ButtonFullComponent({
+  const ButtonComponent({
     super.key,
     required this.text,
+    required this.bgcolor,
     // required this.onPressed,
   });
 
   @override
+  State<ButtonComponent> createState() => _ButtonComponentState();
+}
+
+class _ButtonComponentState extends State<ButtonComponent> {
+  @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: () {},
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.primaryHoney,
-        minimumSize: Size(double.infinity, 56),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(9999),
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: ElevatedButton(
+        onPressed: () {},
+        style: ElevatedButton.styleFrom(
+          backgroundColor: widget.bgcolor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(9999),
+          ),
         ),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: AppColors.primaryBlack,
-          fontWeight: FontWeight.bold,
-          fontSize: 20,
+        child: Text(
+          widget.text,
+          style: TextStyle(
+            color: AppColors.primaryBlack,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
         ),
       ),
     );

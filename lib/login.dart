@@ -91,11 +91,15 @@ class _LoginState extends State<Login> {
                     TextFieldComponent(
                       icon: Icons.lock_outline,
                       hinttext: 'Password',
+                      isPassword: true,
                     ),
-                    SizedBox(height: 16),
+                    SizedBox(height: 20),
 
                     //button masuk
-                    ButtonFullComponent(text: "Masuk"),
+                    ButtonComponent(
+                      text: "Masuk",
+                      bgcolor: AppColors.primaryHoney,
+                    ),
                     SizedBox(height: 16),
                   ],
                 ),
@@ -134,66 +138,4 @@ class _LoginState extends State<Login> {
       ),
     );
   }
-
-  // ElevatedButton ButtonFullComponent() {
-  //   return ElevatedButton(
-  //                 onPressed: () {
-  //                   setState(() {});
-  //                 },
-  //                 style: ElevatedButton.styleFrom(
-  //                   backgroundColor: AppColors.primaryHoney,
-  //                   minimumSize: Size(double.infinity, 56),
-  //                   shape: RoundedRectangleBorder(
-  //                     borderRadius: BorderRadius.circular(9999),
-  //                   ),
-  //                 ),
-  //                 child: Text(
-  //                   "Masuk",
-  //                   style: TextStyle(
-  //                     color: AppColors.primaryBlack,
-  //                     fontWeight: FontWeight.bold,
-  //                     fontSize: 20,
-  //                   ),
-  //                 ),
-  //               );
-  // }
-
-  // TextFormField textFieldComponent(IconData icon, String hintext) {
-  //   return TextFormField(
-  //     decoration: InputDecoration(
-  //       prefixIcon: Icon(icon),
-  //       prefixIconColor: AppColors.primaryBrown,
-
-  //       hintText: hintext,
-  //       hintStyle: TextStyle(color: const Color(0xFF626566), fontSize: 14),
-
-  //       filled: true,
-  //       fillColor: Color(0xFFFFFFFF),
-
-  //       // border normal
-  //       border: OutlineInputBorder(
-  //         borderRadius: BorderRadius.circular(12),
-  //         borderSide: BorderSide(color: AppColors.primaryBrown, width: 1),
-  //       ),
-
-  //       // border saat belum fokus
-  //       enabledBorder: OutlineInputBorder(
-  //         borderRadius: BorderRadius.circular(12),
-  //         borderSide: BorderSide(color: AppColors.primaryBrown, width: 1),
-  //       ),
-
-  //       // border saat diklik/focus
-  //       focusedBorder: OutlineInputBorder(
-  //         borderRadius: BorderRadius.circular(12),
-  //         borderSide: BorderSide(color: AppColors.primaryBrown, width: 2),
-  //       ),
-
-  //       // border saat input salah
-  //       errorBorder: OutlineInputBorder(
-  //         borderRadius: BorderRadius.circular(12),
-  //         borderSide: BorderSide(color: Colors.red, width: 2),
-  //       ),
-  //     ),
-  //   );
-  // }
 }

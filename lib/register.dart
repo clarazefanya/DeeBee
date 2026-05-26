@@ -12,6 +12,7 @@ class Register extends StatefulWidget {
 }
 
 class _RegisterState extends State<Register> {
+  //dummy data, nanti gambarnya diganti
   List<String> avatars = [
     'assets/images/User Avatar.png',
     'assets/images/User Avatar.png',
@@ -109,6 +110,7 @@ class _RegisterState extends State<Register> {
                     TextFieldComponent(
                       icon: Icons.lock_outline,
                       hinttext: 'Minimal 8 karakter',
+                      isPassword: true,
                     ),
                     SizedBox(height: 16),
 
@@ -120,6 +122,7 @@ class _RegisterState extends State<Register> {
                     TextFieldComponent(
                       icon: Icons.verified_user_outlined,
                       hinttext: 'Ulangi password',
+                      isPassword: true,
                     ),
                     SizedBox(height: 16),
 
@@ -128,7 +131,6 @@ class _RegisterState extends State<Register> {
                       "Pilih Avatar",
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    SizedBox(height: 16),
 
                     GridView.builder(
                       shrinkWrap: true,
@@ -172,7 +174,10 @@ class _RegisterState extends State<Register> {
                     SizedBox(height: 16),
 
                     //button daftar
-                    ButtonFullComponent(text: "Daftar"),
+                    ButtonComponent(
+                      text: "Daftar",
+                      bgcolor: AppColors.primaryHoney,
+                    ),
                     SizedBox(height: 16),
                   ],
                 ),
