@@ -12,6 +12,10 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -80,6 +84,15 @@ class _LoginState extends State<Login> {
                     TextFieldComponent(
                       icon: Icons.email_outlined,
                       hinttext: 'example@email.com',
+                      textFieldCont: emailController,
+                      textFieldVal: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Email wajib diisi";
+                        } else if (!value.contains('@')) {
+                          return "Format email tidak valid";
+                        }
+                        return null;
+                      },
                     ),
                     SizedBox(height: 16),
 
@@ -92,6 +105,15 @@ class _LoginState extends State<Login> {
                       icon: Icons.lock_outline,
                       hinttext: 'Password',
                       isPassword: true,
+                      textFieldCont: passwordController,
+                      textFieldVal: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Password wajib diisi";
+                        } else if (value.length < 8) {
+                          return "Password terlalu singkat";
+                        }
+                        return null;
+                      },
                     ),
                     SizedBox(height: 20),
 

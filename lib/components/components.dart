@@ -6,12 +6,16 @@ class TextFieldComponent extends StatefulWidget {
   final IconData icon;
   final String hinttext;
   final bool isPassword; //untuk password
+  final String? Function(String?)? textFieldVal;
+  final TextEditingController textFieldCont;
 
   const TextFieldComponent({
     super.key,
     required this.icon,
     required this.hinttext,
     this.isPassword = false, //optional hanya utk password
+    required this.textFieldCont,
+    this.textFieldVal,
   });
 
   @override
@@ -26,6 +30,8 @@ class _TextFieldComponentState extends State<TextFieldComponent> {
   Widget build(BuildContext context) {
     return TextFormField(
       obscureText: widget.isPassword ? obsecure : false,
+      controller: widget.textFieldCont,
+      validator: widget.textFieldVal,
 
       decoration: InputDecoration(
         prefixIcon: Icon(widget.icon),

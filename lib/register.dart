@@ -20,6 +20,14 @@ class _RegisterState extends State<Register> {
   ];
   int? selectedAvatar;
 
+  //validator form
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmpasswordController =
+      TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -88,6 +96,8 @@ class _RegisterState extends State<Register> {
                     TextFieldComponent(
                       icon: Icons.person_outline,
                       hinttext: 'Siapa namamu?',
+                      textFieldCont: nameController,
+                      //textfieldval
                     ),
                     SizedBox(height: 16),
 
@@ -99,6 +109,8 @@ class _RegisterState extends State<Register> {
                     TextFieldComponent(
                       icon: Icons.email_outlined,
                       hinttext: 'example@email.com',
+                      textFieldCont: emailController,
+                      //textfieldval
                     ),
                     SizedBox(height: 16),
 
@@ -111,6 +123,8 @@ class _RegisterState extends State<Register> {
                       icon: Icons.lock_outline,
                       hinttext: 'Minimal 8 karakter',
                       isPassword: true,
+                      textFieldCont: passwordController,
+                      //textfieldval
                     ),
                     SizedBox(height: 16),
 
@@ -123,6 +137,8 @@ class _RegisterState extends State<Register> {
                       icon: Icons.verified_user_outlined,
                       hinttext: 'Ulangi password',
                       isPassword: true,
+                      textFieldCont: confirmpasswordController,
+                      //textfieldval
                     ),
                     SizedBox(height: 16),
 

@@ -10,6 +10,10 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  //variable dots carousel
+  final PageController controller = PageController();
+  int currentPage = 0;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -17,35 +21,52 @@ class _HomeState extends State<Home> {
       appBar: DeebeeAppbar(isGameplay: false),
       body: ListView(
         children: [
-          //carousel nanti pindahin kesini
+          // CAROUSEL
+          SizedBox(
+            height: 180,
+
+            child: PageView(
+              controller: controller,
+              onPageChanged: (index) {
+                setState(() {
+                  currentPage = index;
+                });
+              },
+              //banner
+              children: [
+                banner(color: Colors.orange, text: "Selamat datang di DeeBee!"),
+                banner(color: Colors.blue, text: "Belajar SQL lebih seru 🚀"),
+                banner(
+                  color: Colors.green,
+                  text: "Kumpulkan XP sebanyak mungkin!",
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 12),
+          //dots carousel
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(3, (index) {
+              return AnimatedContainer(
+                duration: Duration(milliseconds: 250),
+                margin: EdgeInsets.symmetric(horizontal: 4),
+                width: currentPage == index ? 24 : 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: currentPage == index
+                      ? AppColors.primaryHoney
+                      : Colors.grey.shade400,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              );
+            }),
+          ),
+
           Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
               children: [
-                // CAROUSEL
-                SizedBox(
-                  height: 180,
-
-                  child: PageView(
-                    children: [
-                      banner(
-                        color: Colors.orange,
-                        text: "Selamat datang di DeeBee!",
-                      ),
-
-                      banner(
-                        color: Colors.blue,
-                        text: "Belajar SQL lebih seru 🚀",
-                      ),
-
-                      banner(
-                        color: Colors.green,
-                        text: "Kumpulkan XP sebanyak mungkin!",
-                      ),
-                    ],
-                  ),
-                ),
-
                 // PROGRESS BAR PERJALANAN BELAJARMU
                 Container(
                   padding: EdgeInsets.all(16),
