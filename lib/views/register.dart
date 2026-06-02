@@ -1,7 +1,7 @@
 import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/extension/navigator.dart';
-import 'package:deebee_user/login.dart';
+import 'package:deebee_user/views/login.dart';
 import 'package:flutter/material.dart';
 
 class Register extends StatefulWidget {
@@ -21,7 +21,7 @@ class _RegisterState extends State<Register> {
   int? selectedAvatar;
 
   //validator form
-  final _formKey = GlobalKey<FormState>();
+  final _registerFormKey = GlobalKey<FormState>();
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -88,6 +88,7 @@ class _RegisterState extends State<Register> {
 
               //input form register
               Form(
+                key: _registerFormKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -193,6 +194,7 @@ class _RegisterState extends State<Register> {
                     ButtonComponent(
                       text: "Daftar",
                       bgcolor: AppColors.primaryHoney,
+                      onPressed: () {},
                     ),
                     SizedBox(height: 16),
                   ],

@@ -20,13 +20,18 @@ class _testState extends State<Test> {
             children: [
               //test 2 button
               Expanded(
-                child: ButtonComponent(text: "button 1", bgcolor: Colors.white),
+                child: ButtonComponent(
+                  text: "button 1",
+                  bgcolor: Colors.white,
+                  onPressed: () {},
+                ),
               ),
               SizedBox(width: 5),
               Expanded(
                 child: ButtonComponent(
                   text: "button2",
                   bgcolor: AppColors.primaryHoney,
+                  onPressed: () {},
                 ),
               ),
             ],

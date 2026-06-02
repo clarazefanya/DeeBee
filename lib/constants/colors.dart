@@ -9,7 +9,7 @@ class AppColors {
 
   static const Color borderBrown = Color(0xFF514532); //dari login register
   static const Color borderLightBrown = Color(0xFFD5C4AB); //dari gameplay
-  static const Color borderCream = Color(0xFFF3E6D6); //dari hoeme
+  static const Color borderCream = Color(0xFFF3E6D6); //dari home
 
   // static const Color textPrimary = Color(0xFF222222);
   // static const Color textSecondary = Color(0xFF757575);

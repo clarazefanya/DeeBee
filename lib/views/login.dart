@@ -1,7 +1,7 @@
 import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/extension/navigator.dart';
-import 'package:deebee_user/register.dart';
+import 'package:deebee_user/views/register.dart';
 import 'package:flutter/material.dart';
 
 class Login extends StatefulWidget {
@@ -12,7 +12,8 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  final _formKey = GlobalKey<FormState>();
+  //validator form
+  final _loginFormKey = GlobalKey<FormState>();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
@@ -73,6 +74,7 @@ class _LoginState extends State<Login> {
 
               //input form login
               Form(
+                key: _loginFormKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -121,6 +123,7 @@ class _LoginState extends State<Login> {
                     ButtonComponent(
                       text: "Masuk",
                       bgcolor: AppColors.primaryHoney,
+                      onPressed: () {},
                     ),
                     SizedBox(height: 16),
                   ],

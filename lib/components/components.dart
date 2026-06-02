@@ -96,13 +96,13 @@ class _TextFieldComponentState extends State<TextFieldComponent> {
 class ButtonComponent extends StatefulWidget {
   final String text;
   final Color bgcolor;
-  // final VoidCallback onPressed;
+  final VoidCallback onPressed;
 
   const ButtonComponent({
     super.key,
     required this.text,
     required this.bgcolor,
-    // required this.onPressed,
+    required this.onPressed,
   });
 
   @override
@@ -116,7 +116,7 @@ class _ButtonComponentState extends State<ButtonComponent> {
       width: double.infinity,
       height: 50,
       child: ElevatedButton(
-        onPressed: () {},
+        onPressed: widget.onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: widget.bgcolor,
           shape: RoundedRectangleBorder(

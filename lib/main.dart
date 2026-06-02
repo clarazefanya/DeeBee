@@ -1,4 +1,4 @@
-import 'package:deebee_user/home.dart';
+import 'package:deebee_user/views/home.dart';
 import 'package:flutter/material.dart';
 
 void main() {
