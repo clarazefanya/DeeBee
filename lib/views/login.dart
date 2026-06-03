@@ -1,8 +1,11 @@
 import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/constants/colors.dart';
+import 'package:deebee_user/database/preference_handler.dart';
 import 'package:deebee_user/extension/navigator.dart';
+import 'package:deebee_user/views/home.dart';
 import 'package:deebee_user/views/register.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -16,6 +19,58 @@ class _LoginState extends State<Login> {
   final _loginFormKey = GlobalKey<FormState>();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
+  // Function button login
+  void login() async {
+    // //jalankan validator Form
+    // if (!_loginFormKey.currentState!.validate()) {
+    //   return;
+    // }
+
+    // //panggil database helper, read
+    // final pengguna = await DBHelper().loginUser(
+    //   emailController.text.trim(),
+    //   passwordController.text,
+    // );
+
+    // //cek apakah widget masih terpasang (mounted) sebelum menggunakan context
+    // if (!mounted) return;
+
+    // //cek hasil login
+    // if (pengguna != null) {
+    //   //LOGIN BERHASIL
+    // ubah status menjadi setLogin(true), lanjut ke halaman realtime_list
+    // await PreferenceHandler.setLogin(true);
+    // if (!mounted) return;
+    // context.pushReplacement(Home());
+    // } else {
+    //   //LOGIN GAGAL
+    //   ScaffoldMessenger.of(
+    //     context,
+    //   ).showSnackBar(SnackBar(content: Text('Email atau password salah')));
+    // }
+
+    if (_loginFormKey.currentState!.validate()) {
+      print("Sudah memenuhi syarat");
+      //tugas11flutterA: ubah status menjadi setLogin(true) lalu arahkan ke Home.
+      await PreferenceHandler.setLogin(true);
+      if (!mounted) return;
+      //ke halaman home
+      context.pushReplacement(Home());
+    } else {
+      print("Belum memenuhi syarat");
+      //toast message
+      Fluttertoast.showToast(
+        msg: "Silakan periksa kembali",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +146,7 @@ class _LoginState extends State<Login> {
                         if (value == null || value.isEmpty) {
                           return "Email wajib diisi";
                         } else if (!value.contains('@')) {
-                          return "Format email tidak valid";
+                          return "Email harus mengandung '@'";
                         }
                         return null;
                       },
@@ -123,7 +178,7 @@ class _LoginState extends State<Login> {
                     ButtonComponent(
                       text: "Masuk",
                       bgcolor: AppColors.primaryHoney,
-                      onPressed: () {},
+                      onPressed: login,
                     ),
                     SizedBox(height: 16),
                   ],

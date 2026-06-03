@@ -2,14 +2,19 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   static const Color primaryHoney = Color(0xFFFFB800);
-  static const Color primaryCream = Color(0xFFFFF2E1);
   static const Color primaryBlack = Color(0xFF000000);
+  static const Color primaryGreyLocked = Color(0xFFE1E3E4);
+  static const Color primaryCream = Color(0xFFFFF2E1);
 
   static const Color background = Color(0xFFFFF8F3);
 
   static const Color borderBrown = Color(0xFF514532); //dari login register
   static const Color borderLightBrown = Color(0xFFD5C4AB); //dari gameplay
   static const Color borderCream = Color(0xFFF3E6D6); //dari home
+
+  static const Color statusInProgress = Color(0xFFFFB800);
+  static const Color statusCompleted = Color(0xFF4ADE80);
+  static const Color statusLocked = Color(0xFFE1E3E4);
 
   // static const Color textPrimary = Color(0xFF222222);
   // static const Color textSecondary = Color(0xFF757575);

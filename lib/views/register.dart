@@ -1,8 +1,10 @@
 import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/extension/navigator.dart';
+import 'package:deebee_user/views/home.dart';
 import 'package:deebee_user/views/login.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class Register extends StatefulWidget {
   const Register({super.key});
@@ -18,7 +20,7 @@ class _RegisterState extends State<Register> {
     'assets/images/User Avatar.png',
     'assets/images/User Avatar.png',
   ];
-  int? selectedAvatar;
+  int selectedAvatar = 0;
 
   //validator form
   final _registerFormKey = GlobalKey<FormState>();
@@ -27,6 +29,61 @@ class _RegisterState extends State<Register> {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmpasswordController =
       TextEditingController();
+
+  // Function button register
+  void register() async {
+    // //jalankan validator form
+    // if (!_registerFormKey.currentState!.validate()) {
+    //   return;
+    // }
+
+    // //buat model user
+    // final user = UserModelSql(
+    //   name: nameController.text.trim(),
+    //   email: emailController.text.trim(),
+    //   password: passwordController.text,
+    //   avatarIndex: selectedAvatar,
+    // );
+
+    // //panggil database helper, create
+    // bool success = await DBHelper().registerUser(user);
+
+    // //cek apakah widget masih terpasang (mounted) sebelum menggunakan context
+    // if (!mounted) return;
+
+    // //cek hasil register
+    // if (success) {
+    //   //create berhasil
+    //   ScaffoldMessenger.of(
+    //     context,
+    //   ).showSnackBar(SnackBar(content: Text("Register berhasil")));
+    //   context.push(Login());
+    // }
+    // else {
+    //   //create gagal
+    //   ScaffoldMessenger.of(
+    //     context,
+    //   ).showSnackBar(SnackBar(content: Text("Email sudah terdaftar")));
+    // }
+
+    if (_registerFormKey.currentState!.validate()) {
+      print("Sudah memenuhi syarat");
+      //ke halaman home
+      context.pushReplacement(Home());
+    } else {
+      print("Belum memenuhi syarat");
+      //toast message
+      Fluttertoast.showToast(
+        msg: "Silakan periksa kembali",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +155,12 @@ class _RegisterState extends State<Register> {
                       icon: Icons.person_outline,
                       hinttext: 'Siapa namamu?',
                       textFieldCont: nameController,
-                      //textfieldval
+                      textFieldVal: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Nama wajib diisi";
+                        }
+                        return null;
+                      },
                     ),
                     SizedBox(height: 16),
 
@@ -111,7 +173,14 @@ class _RegisterState extends State<Register> {
                       icon: Icons.email_outlined,
                       hinttext: 'example@email.com',
                       textFieldCont: emailController,
-                      //textfieldval
+                      textFieldVal: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Email wajib diisi";
+                        } else if (!value.contains('@')) {
+                          return "Email harus mengandung '@'";
+                        }
+                        return null;
+                      },
                     ),
                     SizedBox(height: 16),
 
@@ -125,7 +194,14 @@ class _RegisterState extends State<Register> {
                       hinttext: 'Minimal 8 karakter',
                       isPassword: true,
                       textFieldCont: passwordController,
-                      //textfieldval
+                      textFieldVal: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Password wajib diisi";
+                        } else if (value.length < 8) {
+                          return "Password terlalu singkat";
+                        }
+                        return null;
+                      },
                     ),
                     SizedBox(height: 16),
 
@@ -139,7 +215,14 @@ class _RegisterState extends State<Register> {
                       hinttext: 'Ulangi password',
                       isPassword: true,
                       textFieldCont: confirmpasswordController,
-                      //textfieldval
+                      textFieldVal: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Konfirmasi password wajib diisi";
+                        } else if (value != passwordController.text) {
+                          return "Password tidak cocok";
+                        }
+                        return null;
+                      },
                     ),
                     SizedBox(height: 16),
 
@@ -194,7 +277,7 @@ class _RegisterState extends State<Register> {
                     ButtonComponent(
                       text: "Daftar",
                       bgcolor: AppColors.primaryHoney,
-                      onPressed: () {},
+                      onPressed: register, //panggil function button register
                     ),
                     SizedBox(height: 16),
                   ],
