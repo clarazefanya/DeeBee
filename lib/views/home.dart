@@ -180,12 +180,14 @@ class _HomeState extends State<Home> {
                         //card
                         InkWell(
                           onTap: () {
-                            context.push(ChapterSelect());
+                            setState(() {
+                              context.push(ChapterSelect());
+                            });
                           },
                           child: Card(
                             color: Colors.white,
                             margin: EdgeInsets.zero,
-                            elevation: 0,
+                            elevation: isStatus == "l" ? 0 : 2,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                               side: BorderSide(color: AppColors.borderCream),
@@ -210,8 +212,11 @@ class _HomeState extends State<Home> {
                                       isStatus == "c"
                                           ? Icons.check_circle_outline
                                           : isStatus == "i"
-                                          ? Icons.play_arrow_outlined
+                                          ? Icons.play_arrow
                                           : Icons.lock_outline,
+                                      color: isStatus == "c"
+                                          ? AppColors.statusCompletedIcon
+                                          : AppColors.primaryBlack,
                                     ),
                                   ),
                                   SizedBox(width: 16),
@@ -243,7 +248,11 @@ class _HomeState extends State<Home> {
                                           children: [
                                             Expanded(
                                               child: LinearProgressIndicator(
-                                                value: 0.00,
+                                                value: isStatus == "c"
+                                                    ? 1.00
+                                                    : isStatus == "i"
+                                                    ? 0.5
+                                                    : 0.00,
                                                 minHeight: 12,
                                                 backgroundColor: const Color(
                                                   0xFFF9ECDB,
@@ -281,16 +290,17 @@ class _HomeState extends State<Home> {
                           ),
                         ),
                         //stack locked
-                        Positioned.fill(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: AppColors.primaryCream.withValues(
-                                alpha: 0.5,
+                        if (isStatus == "l")
+                          Positioned.fill(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryCream.withValues(
+                                  alpha: 0.5,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                        ),
                       ],
                     );
                   },

@@ -145,6 +145,7 @@ class DeebeeAppbar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
+      automaticallyImplyLeading: false,
       backgroundColor: AppColors.background,
       leading: isGameplay
           ? IconButton(onPressed: () {}, icon: Icon(Icons.menu))
