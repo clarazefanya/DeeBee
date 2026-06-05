@@ -50,6 +50,10 @@ class _ChapterSelectState extends State<ChapterSelect> {
                 ),
                 SizedBox(height: 24),
 
+                //button create chapter utk admin
+                ButtonCreateAdmin(text: "Buat Chapter Baru", onPressed: () {}),
+                SizedBox(height: 24),
+
                 //listview chapter
                 ListView.separated(
                   shrinkWrap: true,
@@ -188,6 +192,24 @@ class _ChapterSelectState extends State<ChapterSelect> {
                                             alpha: 0.5,
                                           ),
                                     borderRadius: BorderRadius.circular(999),
+                                  ),
+
+                                  //row edit delete utk admin
+                                  SizedBox(height: 6),
+                                  Row(
+                                    children: [
+                                      ButtonActionAdmin(
+                                        text: "Edit",
+                                        bgColor: AppColors.blueComponent,
+                                        onPressed: () {},
+                                      ),
+                                      SizedBox(width: 5),
+                                      ButtonActionAdmin(
+                                        text: "Delete",
+                                        bgColor: AppColors.redComponent,
+                                        onPressed: () {},
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),

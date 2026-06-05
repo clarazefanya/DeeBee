@@ -155,33 +155,61 @@ class _LevelSelectState extends State<LevelSelect> {
                       children: [
                         //card kotak level
                         Expanded(
-                          child: Card(
-                            margin: EdgeInsets.zero,
-                            elevation: isStatus == "l" ? 0 : 2,
-                            color: isStatus == "c"
-                                ? AppColors.statusCompleted
-                                : isStatus == "i"
-                                ? AppColors.primaryHoney
-                                : AppColors.statusLocked,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: SizedBox(
-                              width: double.infinity,
-                              height: 80,
-                              child: Icon(
-                                isStatus == "c"
-                                    ? Icons.check_circle_outline
-                                    : isStatus == "i"
-                                    ? Icons.play_arrow
-                                    : Icons.lock_outline,
-                                color: isStatus == "c"
-                                    ? AppColors.statusCompletedIcon
-                                    : Colors.black,
-                                size: 32,
-                              ),
-                            ),
-                          ),
+                          child:
+                              //stack utk icon edit delete admin
+                              Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  Card(
+                                    margin: EdgeInsets.zero,
+                                    elevation: isStatus == "l" ? 0 : 2,
+                                    color: isStatus == "c"
+                                        ? AppColors.statusCompleted
+                                        : isStatus == "i"
+                                        ? AppColors.primaryHoney
+                                        : AppColors.statusLocked,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: SizedBox.expand(
+                                      // width: double.infinity,
+                                      // height: 80,
+                                      child: Icon(
+                                        isStatus == "c"
+                                            ? Icons.check_circle_outline
+                                            : isStatus == "i"
+                                            ? Icons.play_arrow
+                                            : Icons.lock_outline,
+                                        color: isStatus == "c"
+                                            ? AppColors.statusCompletedIcon
+                                            : Colors.black,
+                                        size: 32,
+                                      ),
+                                    ),
+                                  ),
+
+                                  //tombol edit delete utk admin
+                                  Positioned(
+                                    top: 5,
+                                    right: 5,
+                                    child: Row(
+                                      children: [
+                                        ActionCircleAdmin(
+                                          icon: Icons.edit,
+                                          color: AppColors.blueComponent,
+                                          onTap: () {},
+                                        ),
+                                        SizedBox(width: 4),
+                                        ActionCircleAdmin(
+                                          icon: Icons.delete,
+                                          color: AppColors.redComponent,
+                                          onTap: () {},
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ], ////b
+                              ), /////b
                         ),
                         SizedBox(height: 10),
 

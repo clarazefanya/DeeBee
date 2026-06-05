@@ -14,6 +14,9 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  //test var admin
+  bool isPublished = false;
+
   //variable dots carousel
   final PageController pageControl = PageController();
   late Timer timer;
@@ -162,8 +165,12 @@ class _HomeState extends State<Home> {
                   textAlign: TextAlign.left,
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
                 ),
-
                 SizedBox(height: 12),
+
+                //button create modul utk admin
+                ButtonCreateAdmin(text: "Buat Modul Baru", onPressed: () {}),
+                SizedBox(height: 12),
+
                 ListView.separated(
                   shrinkWrap: true,
                   physics: NeverScrollableScrollPhysics(),
@@ -278,6 +285,38 @@ class _HomeState extends State<Home> {
                                                   : isStatus == "i"
                                                   ? "50%"
                                                   : "0%",
+                                            ),
+                                          ],
+                                        ),
+
+                                        //row edit delete publish utk admin
+                                        SizedBox(height: 6),
+                                        Row(
+                                          children: [
+                                            ButtonActionAdmin(
+                                              text: isPublished
+                                                  ? "Unpublish"
+                                                  : "Publish",
+                                              bgColor: isPublished
+                                                  ? Colors.transparent
+                                                  : AppColors.primaryCream,
+                                              onPressed: () {
+                                                setState(() {
+                                                  isPublished = !isPublished;
+                                                });
+                                              },
+                                            ),
+                                            SizedBox(width: 5),
+                                            ButtonActionAdmin(
+                                              text: "Edit",
+                                              bgColor: AppColors.blueComponent,
+                                              onPressed: () {},
+                                            ),
+                                            SizedBox(width: 5),
+                                            ButtonActionAdmin(
+                                              text: "Delete",
+                                              bgColor: AppColors.redComponent,
+                                              onPressed: () {},
                                             ),
                                           ],
                                         ),

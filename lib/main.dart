@@ -1,5 +1,5 @@
 import 'package:deebee_user/database/preference_handler.dart';
-import 'package:deebee_user/views/profile.dart';
+import 'package:deebee_user/views/level_select.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
@@ -39,7 +39,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: Profile(),
+      home: LevelSelect(),
     );
   }
 }

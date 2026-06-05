@@ -197,4 +197,96 @@ class DeebeeAppbar extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
 
+// BUTTON ADMIN //
+
+// BUTTON CREATE ADMIN
+class ButtonCreateAdmin extends StatelessWidget {
+  final String text;
+  final VoidCallback onPressed;
+
+  const ButtonCreateAdmin({
+    super.key,
+    required this.text,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryHoney),
+      onPressed: onPressed,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.add_outlined),
+          SizedBox(width: 8),
+          Text(text, style: TextStyle(fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+}
+
+// BUTTON ACTION ADMIN
+class ButtonActionAdmin extends StatelessWidget {
+  final String text;
+  final Color bgColor;
+  final VoidCallback onPressed;
+
+  const ButtonActionAdmin({
+    super.key,
+    required this.text,
+    required this.bgColor,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: bgColor,
+        padding: EdgeInsets.all(0),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+      onPressed: onPressed,
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          color: AppColors.primaryBlack,
+        ),
+      ),
+    );
+  }
+}
+
+// ICON ACTION ADMIN
+class ActionCircleAdmin extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const ActionCircleAdmin({
+    super.key,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(100),
+      onTap: onTap,
+      child: Container(
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        child: Icon(icon, color: Colors.white, size: 14),
+      ),
+    );
+  }
+}
+
 // COMPONENT LAIN LAGI

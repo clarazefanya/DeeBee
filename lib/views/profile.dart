@@ -18,6 +18,8 @@ class _ProfileState extends State<Profile> {
       body: ListView(
         children: [
           Stack(
+            clipBehavior: Clip.none,
+            // alignment: Alignment.center,
             children: [
               //background kotak kuning
               Container(
@@ -184,151 +186,394 @@ class _ProfileState extends State<Profile> {
                     SizedBox(height: 24),
 
                     //3 kotak statistik
-                    Row(
-                      children: [
-                        //progress
-                        Expanded(
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 26,
-                            ),
-                            // padding: EdgeInsets.all(26),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.borderCream),
-                            ),
-                            child: Column(
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: AppColors.primaryHoney.withValues(
-                                      alpha: 0.20,
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          //progress
+                          Expanded(
+                            flex: 1,
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 26,
+                              ),
+                              // padding: EdgeInsets.all(26),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: AppColors.borderCream,
+                                ),
+                              ),
+                              child: Column(
+                                children: [
+                                  Container(
+                                    padding: EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: AppColors.primaryHoney.withValues(
+                                        alpha: 0.20,
+                                      ),
+                                    ),
+                                    child: Icon(
+                                      Icons.trending_up,
+                                      color: const Color(0xFF7C5800),
                                     ),
                                   ),
-                                  child: Icon(
-                                    Icons.add,
-                                    color: const Color(0xFF7C5800),
+                                  Spacer(),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    "Progres",
+                                    style: TextStyle(fontSize: 13),
                                   ),
-                                ),
-                                SizedBox(height: 8),
-                                Text("Progres", style: TextStyle(fontSize: 13)),
-                                SizedBox(height: 8),
-                                Text(
-                                  "32%",
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 12),
-
-                        //level selesai
-                        Expanded(
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 26,
-                            ),
-                            // padding: EdgeInsets.all(26),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.borderCream),
-                            ),
-                            child: Column(
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: AppColors.statusCompleted.withValues(
-                                      alpha: 0.20,
+                                  Spacer(),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    "32%",
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  child: Icon(
-                                    Icons.check_circle,
-                                    color: AppColors.statusCompleted,
-                                  ),
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  "Level\nSelesai",
-                                  style: TextStyle(fontSize: 13),
-                                  textAlign: TextAlign.center,
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  "42",
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                        SizedBox(width: 12),
+                          SizedBox(width: 12),
 
-                        //chapter
-                        Expanded(
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 26,
-                            ),
-                            // padding: EdgeInsets.all(26),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.borderCream),
-                            ),
-                            child: Column(
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: const Color(
-                                      0xFF00D7FE,
-                                    ).withValues(alpha: 0.20),
-                                  ),
-                                  child: Icon(
-                                    Icons.menu_book_outlined,
-                                    color: Color(0xFF00687B),
-                                  ),
+                          //level selesai
+                          Expanded(
+                            flex: 1,
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 26,
+                              ),
+                              // padding: EdgeInsets.all(26),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: AppColors.borderCream,
                                 ),
-                                SizedBox(height: 8),
-                                Text("Chapter", style: TextStyle(fontSize: 13)),
-                                SizedBox(height: 8),
-                                Text(
-                                  "4",
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
+                              ),
+                              child: Column(
+                                children: [
+                                  Container(
+                                    padding: EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: AppColors.greenComponent
+                                          .withValues(alpha: 0.20),
+                                    ),
+                                    child: Icon(
+                                      Icons.check_circle,
+                                      color: AppColors.greenComponent,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                  Spacer(),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    "Level\nSelesai",
+                                    style: TextStyle(fontSize: 13),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  Spacer(),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    "42",
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                          SizedBox(width: 12),
+
+                          //chapter
+                          Expanded(
+                            flex: 1,
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 26,
+                              ),
+                              // padding: EdgeInsets.all(26),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: AppColors.borderCream,
+                                ),
+                              ),
+                              child: Column(
+                                children: [
+                                  Container(
+                                    padding: EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: AppColors.blueComponent.withValues(
+                                        alpha: 0.20,
+                                      ),
+                                    ),
+                                    child: Icon(
+                                      Icons.menu_book_outlined,
+                                      color: Color(0xFF00687B),
+                                    ),
+                                  ),
+                                  Spacer(),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    "Chapter",
+                                    style: TextStyle(fontSize: 13),
+                                  ),
+                                  Spacer(),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    "4",
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    SizedBox(height: 24),
 
                     //settings, feedback, about us
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.borderCream),
+                      ),
+                      // ClipRRect memastikan efek sentuhan (ripple) tidak keluar dari sudut lengkung
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            //settings/pengaturan
+                            ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: AppColors.primaryHoney,
+                                radius: 16,
+                                child: Icon(
+                                  Icons.settings_outlined,
+                                  color: AppColors.primaryBlack,
+                                  size: 20,
+                                ),
+                              ),
+                              title: const Text(
+                                'Pengaturan',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              trailing: const Icon(
+                                Icons.chevron_right,
+                                // color: Colors.grey,
+                              ),
+                              onTap: () {
+                                // Aksi saat ditekan
+                              },
+                            ),
+
+                            //garis pemisah
+                            const Divider(
+                              height: 1,
+                              color: AppColors.borderCream,
+                            ),
+
+                            //feedback & bug report
+                            ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: AppColors.primaryHoney,
+                                radius: 16,
+                                child: Icon(
+                                  Icons.bug_report_outlined,
+                                  color: AppColors.primaryBlack,
+                                  size: 20,
+                                ),
+                              ),
+                              title: const Text(
+                                'Feedback & Bug Report',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () {},
+                            ),
+
+                            //garis pemisah
+                            const Divider(
+                              height: 1,
+                              color: AppColors.borderCream,
+                            ),
+
+                            //tentang DeeBee
+                            ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: AppColors.primaryHoney,
+                                radius: 16,
+                                child: Icon(
+                                  Icons.info_outline,
+                                  color: AppColors.primaryBlack,
+                                  size: 20,
+                                ),
+                              ),
+                              title: const Text(
+                                'Tentang DeeBee',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () {},
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 24),
 
                     //data management
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.borderCream),
+                      ),
+                      // ClipRRect
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            //judul manajemen data
+                            ListTile(
+                              title: const Text(
+                                'MANAJEMEN DATA',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
 
-                    //button logout
+                            //garis pemisah
+                            const Divider(
+                              height: 1,
+                              color: AppColors.borderCream,
+                            ),
+
+                            //reset progres
+                            ListTile(
+                              leading: Icon(
+                                Icons.restart_alt,
+                                color: Colors.red,
+                                size: 20,
+                              ),
+                              title: const Text(
+                                'Reset Progres',
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              onTap: () {},
+                            ),
+
+                            //garis pemisah
+                            const Divider(
+                              height: 1,
+                              color: AppColors.borderCream,
+                            ),
+
+                            //hapus akun
+                            ListTile(
+                              leading: Icon(
+                                Icons.delete_forever_outlined,
+                                color: Colors.red,
+                                size: 20,
+                              ),
+                              title: const Text(
+                                'Hapus Akun',
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              onTap: () {},
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 24),
+
+                    //button logout/keluar
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        elevation: 0,
+                        side: BorderSide(
+                          color: AppColors.borderBrown,
+                          width: 2,
+                        ),
+                        // shape: RoundedRectangleBorder(
+                        //   borderRadius: BorderRadius.circular(8),
+                        // ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 12,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.logout_outlined,
+                            color: AppColors.borderBrown,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            "Keluar",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.borderBrown,
+                            ),
+                          ),
+                        ],
+                      ),
+                      onPressed: () {},
+                    ),
                   ],
+                ),
+              ),
+
+              //stack gambar nametag
+              Positioned(
+                top: -60, // Mengatur posisi vertikal agar keluar dari card
+                left: 0,
+                right: 0,
+                child: SizedBox(
+                  width: 100,
+                  height: 100,
+                  child: const Icon(Icons.star, color: Colors.black, size: 50),
                 ),
               ),
             ],
