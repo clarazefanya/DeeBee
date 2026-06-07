@@ -1,6 +1,6 @@
 import 'package:deebee_user/database/preference_handler.dart';
 import 'package:deebee_user/extension/navigator.dart';
-import 'package:deebee_user/views/home.dart';
+import 'package:deebee_user/views/bottom_navbar.dart';
 import 'package:deebee_user/views/login.dart';
 import 'package:flutter/material.dart';
 
@@ -24,7 +24,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     if (isLogin) {
-      context.pushReplacement(Home()); //halaman home
+      context.pushReplacement(BottomNavBar()); //halaman home (bottom navbar)
     } else {
       context.pushReplacement(Login()); //halaman login
     }

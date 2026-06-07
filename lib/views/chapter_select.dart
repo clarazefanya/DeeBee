@@ -89,6 +89,15 @@ class _ChapterSelectState extends State<ChapterSelect> {
                                   //row status bar dan chapter brp
                                   Row(
                                     children: [
+                                      //chapter brp
+                                      Text(
+                                        "Chapter 1",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      SizedBox(width: 8),
+
                                       //status bar
                                       Container(
                                         padding: EdgeInsets.symmetric(
@@ -101,12 +110,11 @@ class _ChapterSelectState extends State<ChapterSelect> {
                                           ),
                                           color: isStatus == "c"
                                               ? AppColors.statusCompleted
-                                                    .withValues(alpha: 0.5)
+                                                    .withValues(alpha: 0.3)
                                               : isStatus == "i"
                                               ? AppColors.statusInProgress
-                                                    .withValues(alpha: 0.5)
-                                              : AppColors.statusLocked
-                                                    .withValues(alpha: 0.5),
+                                                    .withValues(alpha: 0.3)
+                                              : AppColors.statusLocked,
                                         ),
                                         child: Text(
                                           isStatus == "c"
@@ -123,15 +131,6 @@ class _ChapterSelectState extends State<ChapterSelect> {
                                                 ? AppColors.statusInProgress
                                                 : AppColors.primaryBlack,
                                           ),
-                                        ),
-                                      ),
-                                      SizedBox(width: 8),
-
-                                      //chapter brp
-                                      Text(
-                                        "Chapter 1",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                     ],

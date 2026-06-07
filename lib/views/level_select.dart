@@ -11,6 +11,9 @@ class LevelSelect extends StatefulWidget {
 }
 
 class _LevelSelectState extends State<LevelSelect> {
+  //var test gridview builder
+  int levelsLength = 8;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -127,22 +130,35 @@ class _LevelSelectState extends State<LevelSelect> {
                       ),
                       child: Icon(Icons.play_arrow),
                     ),
-
                     title: Text(
                       "Intro",
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-
-                    trailing: const Icon(Icons.chevron_right),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ActionCircleAdmin(
+                          icon: Icons.delete,
+                          color: AppColors.redComponent,
+                          onTap: () {},
+                        ),
+                        SizedBox(width: 8),
+                        Icon(Icons.chevron_right),
+                      ],
+                    ),
                   ),
                 ),
+                SizedBox(height: 24),
+
+                //tombol create intro utk admin
+                ButtonCreateAdmin(text: "Buat Intro Baru", onPressed: () {}),
                 SizedBox(height: 24),
 
                 //gridview level
                 GridView.builder(
                   shrinkWrap: true,
                   physics: NeverScrollableScrollPhysics(),
-                  itemCount: 8,
+                  itemCount: levelsLength + 1,
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
                     crossAxisSpacing: 12,
@@ -150,10 +166,15 @@ class _LevelSelectState extends State<LevelSelect> {
                     childAspectRatio: 0.7,
                   ),
                   itemBuilder: (context, index) {
+                    //button create level utk admin di slot terakhir
+                    if (index == levelsLength) {
+                      return const CreateLevelCard();
+                    }
+
+                    //card kotak level
                     String isStatus = "i";
                     return Column(
                       children: [
-                        //card kotak level
                         Expanded(
                           child:
                               //stack utk icon edit delete admin
@@ -215,7 +236,7 @@ class _LevelSelectState extends State<LevelSelect> {
 
                         //nomor level
                         Text(
-                          "Level 1",
+                          "Level ${index + 1}",
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -237,6 +258,51 @@ class _LevelSelectState extends State<LevelSelect> {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+///function button create level
+class CreateLevelCard extends StatelessWidget {
+  const CreateLevelCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {},
+      child: Column(
+        children: [
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                border: Border.all(color: AppColors.primaryHoney, width: 2),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.add, size: 36, color: AppColors.primaryHoney),
+                  SizedBox(height: 8),
+                  Text(
+                    "Buat Level Baru",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          //supaya tingginya mirip dengan LevelCard biasa
+          SizedBox(height: 10),
+          Text("", style: TextStyle(fontSize: 14)),
+          Text("", style: TextStyle(fontSize: 10)),
         ],
       ),
     );

@@ -1,5 +1,8 @@
 import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/constants/colors.dart';
+import 'package:deebee_user/database/preference_handler.dart';
+import 'package:deebee_user/extension/navigator.dart';
+import 'package:deebee_user/views/login.dart';
 import 'package:flutter/material.dart';
 
 class Profile extends StatefulWidget {
@@ -36,7 +39,7 @@ class _ProfileState extends State<Profile> {
 
               //komponen profile
               Padding(
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 60),
                 child: Column(
                   children: [
                     //nametag outer
@@ -54,7 +57,7 @@ class _ProfileState extends State<Profile> {
                         //   horizontal: 8,
                         // ),
                         padding: const EdgeInsets.only(
-                          top: 30,
+                          top: 40,
                           bottom: 8,
                           left: 8,
                           right: 8,
@@ -101,14 +104,14 @@ class _ProfileState extends State<Profile> {
                                   shape: BoxShape.circle,
                                   border: Border.all(
                                     color: AppColors.primaryHoney,
-                                    width: 5,
+                                    width: 3,
                                   ),
                                   color: Colors.white,
                                 ),
                                 child: const CircleAvatar(
                                   radius: 50,
                                   backgroundImage: AssetImage(
-                                    "assets/images/User Avatar.png",
+                                    "assets/images/avatars/logodb2.jpg",
                                   ),
                                 ),
                               ),
@@ -122,6 +125,7 @@ class _ProfileState extends State<Profile> {
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
+                              Text("Karyawan"),
                               SizedBox(height: 32),
 
                               //row email
@@ -450,7 +454,7 @@ class _ProfileState extends State<Profile> {
                     ),
                     SizedBox(height: 24),
 
-                    //data management
+                    //manajemen data
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -534,9 +538,6 @@ class _ProfileState extends State<Profile> {
                           color: AppColors.borderBrown,
                           width: 2,
                         ),
-                        // shape: RoundedRectangleBorder(
-                        //   borderRadius: BorderRadius.circular(8),
-                        // ),
                         padding: const EdgeInsets.symmetric(
                           horizontal: 32,
                           vertical: 12,
@@ -559,21 +560,30 @@ class _ProfileState extends State<Profile> {
                           ),
                         ],
                       ),
-                      onPressed: () {},
+                      onPressed: () async {
+                        //logic logout
+                        await PreferenceHandler.logOut();
+                        if (!context.mounted) return;
+                        context.pushAndRemoveAll(Login());
+                        // snackbar
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Berhasil Logout")),
+                        );
+                      },
                     ),
                   ],
                 ),
               ),
 
-              //stack gambar nametag
+              //stack gambar lanyard
               Positioned(
-                top: -60, // Mengatur posisi vertikal agar keluar dari card
+                top: -20,
                 left: 0,
                 right: 0,
                 child: SizedBox(
-                  width: 100,
-                  height: 100,
-                  child: const Icon(Icons.star, color: Colors.black, size: 50),
+                  width: 110,
+                  height: 110,
+                  child: Image.asset("assets/images/lanyard.png"),
                 ),
               ),
             ],

@@ -184,7 +184,9 @@ class DeebeeAppbar extends StatelessWidget implements PreferredSizeWidget {
               SizedBox(width: 8),
               CircleAvatar(
                 radius: 15,
-                backgroundImage: AssetImage("assets/images/User Avatar.png"),
+                backgroundImage: AssetImage(
+                  "assets/images/avatars/logodb2.jpg",
+                ),
               ),
             ],
           ),

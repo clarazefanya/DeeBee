@@ -28,16 +28,12 @@ class _BottomNavBarState extends State<BottomNavBar> {
   }
 
   //Fungsi helper item navbar
-  BottomNavigationBarItem _buildNavItem(
-    IconData unselectedIcon,
-    IconData selectedIcon,
-    String label,
-  ) {
+  BottomNavigationBarItem _buildNavItem(IconData selectedIcon, String label) {
     return BottomNavigationBarItem(
       // Icon saat tidak dipilih
       icon: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Icon(unselectedIcon, color: AppColors.primaryBlack),
+        child: Icon(selectedIcon, color: AppColors.primaryHoney),
       ),
       // Icon dengan background lingkaran saat dipilih
       activeIcon: Container(
@@ -46,7 +42,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
           color: AppColors.primaryHoney,
           shape: BoxShape.circle,
         ),
-        child: Icon(selectedIcon, color: AppColors.primaryBlack),
+        child: Icon(selectedIcon, color: Colors.white),
       ),
       label: label,
     );
@@ -59,10 +55,11 @@ class _BottomNavBarState extends State<BottomNavBar> {
       //container utk border dan border radius
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
-          color: AppColors.background,
+          // color: AppColors.background,
+          color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
           border: Border(
-            top: BorderSide(color: AppColors.borderBrown, width: 1.5),
+            top: BorderSide(color: AppColors.primaryHoney, width: 1.5),
           ),
         ),
         //gunakan ClipRRect agar isi Navbar tidak menabrak batas lengkungan
@@ -70,19 +67,10 @@ class _BottomNavBarState extends State<BottomNavBar> {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
           child: BottomNavigationBar(
             items: <BottomNavigationBarItem>[
-              _buildNavItem(Icons.home_outlined, Icons.home, 'Home'),
-              if (role == 'admin')
-                _buildNavItem(
-                  Icons.assignment_ind_outlined,
-                  Icons.assignment_ind,
-                  'Admin',
-                ),
-              _buildNavItem(
-                Icons.leaderboard_outlined,
-                Icons.leaderboard,
-                'Leaderboard',
-              ),
-              _buildNavItem(Icons.person_outline, Icons.person, 'Profil'),
+              _buildNavItem(Icons.home, 'Home'),
+              if (role == 'admin') _buildNavItem(Icons.assignment_ind, 'Admin'),
+              _buildNavItem(Icons.leaderboard, 'Leaderboard'),
+              _buildNavItem(Icons.person, 'Profil'),
             ],
             currentIndex: _selectedIndex,
             onTap: _onItemTapped,
@@ -93,7 +81,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
             unselectedItemColor: AppColors.primaryBlack,
             selectedLabelStyle: TextStyle(fontWeight: FontWeight.bold),
             unselectedLabelStyle: TextStyle(fontWeight: FontWeight.bold),
-            showUnselectedLabels: true,
+            showUnselectedLabels: false,
             type: BottomNavigationBarType.fixed,
           ),
         ),

@@ -1,7 +1,6 @@
 import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/extension/navigator.dart';
-import 'package:deebee_user/views/home.dart';
 import 'package:deebee_user/views/login.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -16,9 +15,9 @@ class Register extends StatefulWidget {
 class _RegisterState extends State<Register> {
   //dummy data, nanti gambarnya diganti
   List<String> avatars = [
-    'assets/images/User Avatar.png',
-    'assets/images/User Avatar.png',
-    'assets/images/User Avatar.png',
+    'assets/images/avatars/user-avatars-1.jpg',
+    'assets/images/avatars/user-avatars-2.jpg',
+    'assets/images/avatars/logodb2.jpg',
   ];
   int selectedAvatar = 0;
 
@@ -67,11 +66,9 @@ class _RegisterState extends State<Register> {
     // }
 
     if (_registerFormKey.currentState!.validate()) {
-      print("Sudah memenuhi syarat");
-      //ke halaman home
-      context.pushReplacement(Home());
+      //ke halaman login
+      context.pushReplacement(Login());
     } else {
-      print("Belum memenuhi syarat");
       //toast message
       Fluttertoast.showToast(
         msg: "Silakan periksa kembali",

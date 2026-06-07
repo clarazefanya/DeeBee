@@ -2,7 +2,7 @@ import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/database/preference_handler.dart';
 import 'package:deebee_user/extension/navigator.dart';
-import 'package:deebee_user/views/home.dart';
+import 'package:deebee_user/views/bottom_navbar.dart';
 import 'package:deebee_user/views/register.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -51,14 +51,12 @@ class _LoginState extends State<Login> {
     // }
 
     if (_loginFormKey.currentState!.validate()) {
-      print("Sudah memenuhi syarat");
-      //tugas11flutterA: ubah status menjadi setLogin(true) lalu arahkan ke Home.
+      //ubah status menjadi setLogin(true) lalu arahkan ke Home.
       await PreferenceHandler.setLogin(true);
       if (!mounted) return;
-      //ke halaman home
-      context.pushReplacement(Home());
+      //ke halaman home (bottom navbar)
+      context.pushReplacement(BottomNavBar());
     } else {
-      print("Belum memenuhi syarat");
       //toast message
       Fluttertoast.showToast(
         msg: "Silakan periksa kembali",

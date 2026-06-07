@@ -212,7 +212,7 @@ class _HomeState extends State<Home> {
                                           ? AppColors.statusCompleted
                                           : isStatus == "i"
                                           ? AppColors.statusInProgress
-                                          : AppColors.primaryGreyLocked,
+                                          : AppColors.statusLocked,
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Icon(
