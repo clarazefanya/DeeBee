@@ -4,6 +4,7 @@ import 'package:deebee_user/database/preference_handler.dart';
 import 'package:deebee_user/extension/navigator.dart';
 import 'package:deebee_user/views/login.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -17,7 +18,7 @@ class _ProfileState extends State<Profile> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: DeebeeAppbar(isGameplay: false),
+      appBar: DeebeeAppbar(),
       body: ListView(
         children: [
           Stack(
@@ -418,7 +419,18 @@ class _ProfileState extends State<Profile> {
                                 ),
                               ),
                               trailing: const Icon(Icons.chevron_right),
-                              onTap: () {},
+                              onTap: () async {
+                                final Uri url = Uri.parse(
+                                  'https://docs.google.com/forms/d/e/1FAIpQLSd7dQMkufeVxIkxeFmj_bK6Pz7wGx2lKJ-yDIztApQfYPXqeg/viewform?usp=sharing&ouid=101347985935852050031',
+                                );
+
+                                if (!await launchUrl(
+                                  url,
+                                  mode: LaunchMode.externalApplication,
+                                )) {
+                                  throw Exception('Could not launch $url');
+                                }
+                              },
                             ),
 
                             //garis pemisah

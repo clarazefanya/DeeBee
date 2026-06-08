@@ -1,10 +1,13 @@
 import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/extension/navigator.dart';
+import 'package:deebee_user/models/home_mode.dart';
 import 'package:flutter/material.dart';
 
 class LevelSelect extends StatefulWidget {
-  const LevelSelect({super.key});
+  const LevelSelect({super.key, required this.mode});
+
+  final HomeMode mode;
 
   @override
   State<LevelSelect> createState() => _LevelSelectState();
@@ -18,7 +21,7 @@ class _LevelSelectState extends State<LevelSelect> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: DeebeeAppbar(isGameplay: false),
+      appBar: DeebeeAppbar(),
       body: ListView(
         children: [
           Padding(
@@ -137,12 +140,15 @@ class _LevelSelectState extends State<LevelSelect> {
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        ActionCircleAdmin(
-                          icon: Icons.delete,
-                          color: AppColors.redComponent,
-                          onTap: () {},
-                        ),
-                        SizedBox(width: 8),
+                        if (widget.mode == HomeMode.admin) ...[
+                          //tombol delete intro utk admin
+                          ActionCircleAdmin(
+                            icon: Icons.delete,
+                            color: AppColors.redComponent,
+                            onTap: () {},
+                          ),
+                          SizedBox(width: 8),
+                        ],
                         Icon(Icons.chevron_right),
                       ],
                     ),
@@ -151,14 +157,18 @@ class _LevelSelectState extends State<LevelSelect> {
                 SizedBox(height: 24),
 
                 //tombol create intro utk admin
-                ButtonCreateAdmin(text: "Buat Intro Baru", onPressed: () {}),
-                SizedBox(height: 24),
+                if (widget.mode == HomeMode.admin) ...[
+                  ButtonCreateAdmin(text: "Buat Intro Baru", onPressed: () {}),
+                  SizedBox(height: 24),
+                ],
 
                 //gridview level
                 GridView.builder(
                   shrinkWrap: true,
                   physics: NeverScrollableScrollPhysics(),
-                  itemCount: levelsLength + 1,
+                  itemCount: widget.mode == HomeMode.admin
+                      ? levelsLength + 1
+                      : levelsLength,
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
                     crossAxisSpacing: 12,
@@ -167,8 +177,9 @@ class _LevelSelectState extends State<LevelSelect> {
                   ),
                   itemBuilder: (context, index) {
                     //button create level utk admin di slot terakhir
-                    if (index == levelsLength) {
-                      return const CreateLevelCard();
+                    if (widget.mode == HomeMode.admin &&
+                        index == levelsLength) {
+                      return CreateLevelCard();
                     }
 
                     //card kotak level
@@ -210,25 +221,27 @@ class _LevelSelectState extends State<LevelSelect> {
                                   ),
 
                                   //tombol edit delete utk admin
-                                  Positioned(
-                                    top: 5,
-                                    right: 5,
-                                    child: Row(
-                                      children: [
-                                        ActionCircleAdmin(
-                                          icon: Icons.edit,
-                                          color: AppColors.blueComponent,
-                                          onTap: () {},
-                                        ),
-                                        SizedBox(width: 4),
-                                        ActionCircleAdmin(
-                                          icon: Icons.delete,
-                                          color: AppColors.redComponent,
-                                          onTap: () {},
-                                        ),
-                                      ],
+                                  if (widget.mode == HomeMode.admin) ...[
+                                    Positioned(
+                                      top: 5,
+                                      right: 5,
+                                      child: Row(
+                                        children: [
+                                          ActionCircleAdmin(
+                                            icon: Icons.edit,
+                                            color: AppColors.blueComponent,
+                                            onTap: () {},
+                                          ),
+                                          SizedBox(width: 4),
+                                          ActionCircleAdmin(
+                                            icon: Icons.delete,
+                                            color: AppColors.redComponent,
+                                            onTap: () {},
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
+                                  ], //if
                                 ], ////b
                               ), /////b
                         ),

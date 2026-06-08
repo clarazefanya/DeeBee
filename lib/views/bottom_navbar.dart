@@ -1,5 +1,6 @@
 import 'package:deebee_user/constants/colors.dart';
-import 'package:deebee_user/views/home.dart';
+import 'package:deebee_user/models/home_mode.dart';
+import 'package:deebee_user/views/Home/home.dart';
 import 'package:deebee_user/views/profile.dart';
 import 'package:flutter/material.dart';
 
@@ -12,11 +13,11 @@ class BottomNavBar extends StatefulWidget {
 
 class _BottomNavBarState extends State<BottomNavBar> {
   int _selectedIndex = 0;
-  String role = "user"; //var role
+  String role = "admin"; //var role
 
   List<Widget> get _listHalaman => [
-    const Home(),
-    if (role == 'admin') const Text('Halaman Admin Coming Soon'),
+    const Home(mode: HomeMode.user),
+    if (role == 'admin') const Home(mode: HomeMode.admin),
     const Text('Halaman LeaderBoard Coming Soon'),
     const Profile(),
   ];
@@ -55,7 +56,6 @@ class _BottomNavBarState extends State<BottomNavBar> {
       //container utk border dan border radius
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
-          // color: AppColors.background,
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
           border: Border(

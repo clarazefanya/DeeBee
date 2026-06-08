@@ -138,18 +138,16 @@ class _ButtonComponentState extends State<ButtonComponent> {
 
 // APPBAR
 class DeebeeAppbar extends StatelessWidget implements PreferredSizeWidget {
-  const DeebeeAppbar({super.key, required this.isGameplay});
+  const DeebeeAppbar({super.key, this.leading});
 
-  final bool isGameplay;
+  final Widget? leading;
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
       automaticallyImplyLeading: false,
       backgroundColor: AppColors.background,
-      leading: isGameplay
-          ? IconButton(onPressed: () {}, icon: Icon(Icons.menu))
-          : null,
+      leading: leading,
       title: Row(
         children: [
           Image.asset(
@@ -199,7 +197,24 @@ class DeebeeAppbar extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
 
-// BUTTON ADMIN //
+// ICON APPBAR GAMEPLAY
+class IconAppbarGameplay extends StatelessWidget {
+  const IconAppbarGameplay({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.menu),
+      onPressed: () {
+        // buka popup gameplay
+      },
+    );
+  }
+}
+
+// POP UP GAMEPLAY
+
+/// BUTTON ADMIN ///
 
 // BUTTON CREATE ADMIN
 class ButtonCreateAdmin extends StatelessWidget {
@@ -290,5 +305,48 @@ class ActionCircleAdmin extends StatelessWidget {
     );
   }
 }
+
+// ICON DRAWER ADMIN
+class IconDrawerAdmin extends StatelessWidget {
+  const IconDrawerAdmin({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.menu),
+      onPressed: () {
+        Scaffold.of(context).openDrawer();
+      },
+    );
+  }
+}
+
+// SCAFFOLD KHUSUS HALAMAN ADMIN (KECUALI HOME)
+// class AdminScaffold extends StatelessWidget {
+//   const AdminScaffold({
+//     super.key,
+//     required this.selectedDrawerIndex,
+//     required this.body,
+//   });
+
+//   final int selectedDrawerIndex;
+//   final Widget body;
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       drawer: DrawerAdmin(
+//         selectedIndex: selectedDrawerIndex,
+//         onSelected: (index) {
+//           // routing drawer
+//         },
+//       ),
+//       appBar: DeebeeAppbar(
+//         leading: Builder(builder: (context) => const IconDrawerAdmin()),
+//       ),
+//       body: body,
+//     );
+//   }
+// }
 
 // COMPONENT LAIN LAGI

@@ -1,11 +1,14 @@
 import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/extension/navigator.dart';
-import 'package:deebee_user/views/level_select.dart';
+import 'package:deebee_user/models/home_mode.dart';
+import 'package:deebee_user/views/Home/level_select.dart';
 import 'package:flutter/material.dart';
 
 class ChapterSelect extends StatefulWidget {
-  const ChapterSelect({super.key});
+  const ChapterSelect({super.key, required this.mode});
+
+  final HomeMode mode;
 
   @override
   State<ChapterSelect> createState() => _ChapterSelectState();
@@ -16,7 +19,7 @@ class _ChapterSelectState extends State<ChapterSelect> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: DeebeeAppbar(isGameplay: false),
+      appBar: DeebeeAppbar(),
       body: ListView(
         children: [
           Padding(
@@ -51,8 +54,13 @@ class _ChapterSelectState extends State<ChapterSelect> {
                 SizedBox(height: 24),
 
                 //button create chapter utk admin
-                ButtonCreateAdmin(text: "Buat Chapter Baru", onPressed: () {}),
-                SizedBox(height: 24),
+                if (widget.mode == HomeMode.admin) ...[
+                  ButtonCreateAdmin(
+                    text: "Buat Chapter Baru",
+                    onPressed: () {},
+                  ),
+                  SizedBox(height: 24),
+                ],
 
                 //listview chapter
                 ListView.separated(
@@ -71,7 +79,11 @@ class _ChapterSelectState extends State<ChapterSelect> {
                         //card
                         InkWell(
                           onTap: () {
-                            context.push(LevelSelect());
+                            if (widget.mode == HomeMode.admin) {
+                              context.push(LevelSelect(mode: HomeMode.admin));
+                            } else {
+                              context.push(LevelSelect(mode: HomeMode.user));
+                            }
                           },
                           child: Card(
                             color: Colors.white,
@@ -194,22 +206,24 @@ class _ChapterSelectState extends State<ChapterSelect> {
                                   ),
 
                                   //row edit delete utk admin
-                                  SizedBox(height: 6),
-                                  Row(
-                                    children: [
-                                      ButtonActionAdmin(
-                                        text: "Edit",
-                                        bgColor: AppColors.blueComponent,
-                                        onPressed: () {},
-                                      ),
-                                      SizedBox(width: 5),
-                                      ButtonActionAdmin(
-                                        text: "Delete",
-                                        bgColor: AppColors.redComponent,
-                                        onPressed: () {},
-                                      ),
-                                    ],
-                                  ),
+                                  if (widget.mode == HomeMode.admin) ...[
+                                    SizedBox(height: 6),
+                                    Row(
+                                      children: [
+                                        ButtonActionAdmin(
+                                          text: "Edit",
+                                          bgColor: AppColors.blueComponent,
+                                          onPressed: () {},
+                                        ),
+                                        SizedBox(width: 5),
+                                        ButtonActionAdmin(
+                                          text: "Delete",
+                                          bgColor: AppColors.redComponent,
+                                          onPressed: () {},
+                                        ),
+                                      ],
+                                    ),
+                                  ], //if
                                 ],
                               ),
                             ),
