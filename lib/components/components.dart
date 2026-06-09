@@ -3,19 +3,21 @@ import 'package:flutter/material.dart';
 
 // TEXTFORMFIELD LOGIN REGISTER
 class TextFieldComponent extends StatefulWidget {
-  final IconData icon;
-  final String hinttext;
+  final IconData? icon;
+  final String? hinttext;
+  final int? lines;
   final bool isPassword; //untuk password
   final String? Function(String?)? textFieldVal;
   final TextEditingController textFieldCont;
 
   const TextFieldComponent({
     super.key,
-    required this.icon,
-    required this.hinttext,
+    this.icon,
+    this.hinttext,
+    this.lines,
     this.isPassword = false, //optional hanya utk password
-    required this.textFieldCont,
     this.textFieldVal,
+    required this.textFieldCont,
   });
 
   @override
@@ -32,13 +34,18 @@ class _TextFieldComponentState extends State<TextFieldComponent> {
       obscureText: widget.isPassword ? obsecure : false,
       controller: widget.textFieldCont,
       validator: widget.textFieldVal,
+      maxLines: widget.isPassword ? 1 : widget.lines,
 
       decoration: InputDecoration(
-        prefixIcon: Icon(widget.icon),
+        prefixIcon: widget.icon != null ? Icon(widget.icon) : null,
         prefixIconColor: AppColors.borderBrown,
 
         hintText: widget.hinttext,
-        hintStyle: TextStyle(color: const Color(0xFF626566), fontSize: 14),
+        hintStyle: TextStyle(
+          color: const Color(0xFF626566),
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
 
         //icon hide/show utk password. Jika isPassword true, return icon
         suffixIcon: widget.isPassword
@@ -86,6 +93,60 @@ class _TextFieldComponentState extends State<TextFieldComponent> {
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Colors.red, width: 2),
+        ),
+      ),
+    );
+  }
+}
+
+// DROPDOWN CREATE SCENE
+class DropdownFieldComponent extends StatelessWidget {
+  final String? value;
+  final String hinttext;
+  final List<String> items;
+  final ValueChanged<String?>? onChanged;
+  final String? Function(String?)? validator;
+
+  const DropdownFieldComponent({
+    super.key,
+    required this.value,
+    required this.hinttext,
+    required this.items,
+    required this.onChanged,
+    this.validator,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButtonFormField<String>(
+      initialValue: value,
+      hint: Text(
+        hinttext,
+        style: const TextStyle(color: Color(0xFF626566), fontSize: 14),
+      ),
+      items: items
+          .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+          .toList(),
+      onChanged: onChanged,
+      validator: validator,
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: const Color(0xFFFFFFFF),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.borderBrown, width: 1),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.borderBrown, width: 1),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.borderBrown, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.red, width: 2),
         ),
       ),
     );

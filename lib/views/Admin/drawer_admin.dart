@@ -15,8 +15,8 @@ class DrawerAdmin extends StatelessWidget {
   Widget build(BuildContext context) {
     final menus = [
       "Home Admin",
-      "Gambar Aset Gameplay",
-      "Manajemen User",
+      "Asset Scene",
+      "Manajemen Pengguna",
       "DB Structure Viewer",
     ];
 
@@ -25,7 +25,10 @@ class DrawerAdmin extends StatelessWidget {
         itemCount: menus.length,
         itemBuilder: (context, index) {
           return ListTile(
-            title: Text(menus[index]),
+            title: Text(
+              menus[index],
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
             selected: selectedIndex == index,
             selectedTileColor: AppColors.primaryHoney,
             onTap: () {

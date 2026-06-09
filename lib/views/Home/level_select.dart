@@ -2,6 +2,7 @@ import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/extension/navigator.dart';
 import 'package:deebee_user/models/home_mode.dart';
+import 'package:deebee_user/views/Admin/scene_list.dart';
 import 'package:flutter/material.dart';
 
 class LevelSelect extends StatefulWidget {
@@ -152,6 +153,15 @@ class _LevelSelectState extends State<LevelSelect> {
                         Icon(Icons.chevron_right),
                       ],
                     ),
+                    onTap: () {
+                      if (widget.mode == HomeMode.admin) {
+                        //jika mode admin, ke halaman scene list
+                        //nanti hrs ngikutin nama intro
+                        context.push(SceneList(namaLevel: "Intro"));
+                      } else {
+                        //selain mode admin, ke halaman gameplay scene
+                      }
+                    },
                   ),
                 ),
                 SizedBox(height: 24),
@@ -192,46 +202,55 @@ class _LevelSelectState extends State<LevelSelect> {
                               Stack(
                                 clipBehavior: Clip.none,
                                 children: [
-                                  Card(
-                                    margin: EdgeInsets.zero,
-                                    elevation: isStatus == "l" ? 0 : 2,
-                                    color: isStatus == "c"
-                                        ? AppColors.statusCompleted
-                                        : isStatus == "i"
-                                        ? AppColors.primaryHoney
-                                        : AppColors.statusLocked,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    child: SizedBox.expand(
-                                      // width: double.infinity,
-                                      // height: 80,
-                                      child: Icon(
-                                        isStatus == "c"
-                                            ? Icons.check_circle_outline
-                                            : isStatus == "i"
-                                            ? Icons.play_arrow
-                                            : Icons.lock_outline,
-                                        color: isStatus == "c"
-                                            ? AppColors.statusCompletedIcon
-                                            : Colors.black,
-                                        size: 32,
+                                  InkWell(
+                                    onTap: () {
+                                      if (widget.mode == HomeMode.admin) {
+                                        //jika mode admin, ke halaman scene list
+                                        context.push(
+                                          SceneList(
+                                            namaLevel: "Level ${index + 1}",
+                                          ),
+                                        );
+                                      } else {
+                                        //selain mode admin, ke halaman gameplay scene
+                                      }
+                                    },
+                                    child: Card(
+                                      margin: EdgeInsets.zero,
+                                      elevation: isStatus == "l" ? 0 : 2,
+                                      color: isStatus == "c"
+                                          ? AppColors.statusCompleted
+                                          : isStatus == "i"
+                                          ? AppColors.primaryHoney
+                                          : AppColors.statusLocked,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: SizedBox.expand(
+                                        // width: double.infinity,
+                                        // height: 80,
+                                        child: Icon(
+                                          isStatus == "c"
+                                              ? Icons.check_circle_outline
+                                              : isStatus == "i"
+                                              ? Icons.play_arrow
+                                              : Icons.lock_outline,
+                                          color: isStatus == "c"
+                                              ? AppColors.statusCompletedIcon
+                                              : Colors.black,
+                                          size: 32,
+                                        ),
                                       ),
                                     ),
                                   ),
 
-                                  //tombol edit delete utk admin
+                                  //tombol delete utk admin
                                   if (widget.mode == HomeMode.admin) ...[
                                     Positioned(
                                       top: 5,
                                       right: 5,
                                       child: Row(
                                         children: [
-                                          ActionCircleAdmin(
-                                            icon: Icons.edit,
-                                            color: AppColors.blueComponent,
-                                            onTap: () {},
-                                          ),
                                           SizedBox(width: 4),
                                           ActionCircleAdmin(
                                             icon: Icons.delete,

@@ -13,7 +13,7 @@ class Register extends StatefulWidget {
 }
 
 class _RegisterState extends State<Register> {
-  //dummy data, nanti gambarnya diganti
+  //foto avatars
   List<String> avatars = [
     'assets/images/avatars/user-avatars-1.jpg',
     'assets/images/avatars/user-avatars-2.jpg',

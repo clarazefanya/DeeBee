@@ -18,7 +18,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
   List<Widget> get _listHalaman => [
     const Home(mode: HomeMode.user),
     if (role == 'admin') const Home(mode: HomeMode.admin),
-    const Text('Halaman LeaderBoard Coming Soon'),
+    placeholderLB(),
     const Profile(),
   ];
 
@@ -86,6 +86,21 @@ class _BottomNavBarState extends State<BottomNavBar> {
           ),
         ),
       ),
+    );
+  }
+
+  //placeholder leaderboard
+  Widget placeholderLB() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Image.asset(
+          "assets/images/logodb2-transparan.png",
+          height: 100,
+          width: 100,
+        ),
+        Text('LeaderBoard Coming Soon'),
+      ],
     );
   }
 }

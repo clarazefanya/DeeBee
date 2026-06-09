@@ -1,7 +1,7 @@
 import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/models/home_mode.dart';
-import 'package:deebee_user/views/Admin/asset_gameplay.dart';
+import 'package:deebee_user/views/Admin/asset_scene.dart';
 import 'package:deebee_user/views/Admin/drawer_admin.dart';
 import 'package:deebee_user/views/Admin/user_management.dart';
 import 'package:deebee_user/views/Home/home_content.dart';
@@ -22,7 +22,7 @@ class _HomeState extends State<Home> {
 
   final List<Widget> adminPages = [
     const HomeContent(mode: HomeMode.admin),
-    const AssetGameplay(),
+    const AssetScene(),
     const UserManagement(),
     Text("DB Structure Viewer pakai sqlite_viewer2"),
   ];
