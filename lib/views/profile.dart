@@ -1,7 +1,9 @@
 import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/database/preference_handler.dart';
+import 'package:deebee_user/database/user_repository.dart';
 import 'package:deebee_user/extension/navigator.dart';
+import 'package:deebee_user/models/user_model.dart';
 import 'package:deebee_user/views/login.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -16,10 +18,30 @@ class Profile extends StatefulWidget {
 class _ProfileState extends State<Profile> {
   @override
   Widget build(BuildContext context) {
+    //Ambil userId dari SharedPreferences
+    final int? currentUserId = PreferenceHandler.userId;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: DeebeeAppbar(),
-      body: ListView(
+      body: FutureBuilder<UserModel?>(
+        // Panggil fungsi getUserById
+        future: currentUserId != null 
+            ? UserRepository().getUserById(currentUserId) 
+            : Future.value(null),
+        builder: (context, snapshot) {
+          //Kondisi Loading
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          //Kondisi Gagal/Data Kosong
+          if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
+            return const Center(child: Text("Gagal memuat data profil"));
+          }
+          // Data user berhasil didapatkan
+          final user = snapshot.data!;
+      
+      ListView(
         children: [
           Stack(
             clipBehavior: Clip.none,
@@ -64,12 +86,10 @@ class _ProfileState extends State<Profile> {
                           right: 8,
                         ),
                         child: Container(
-                          // padding: EdgeInsets.all(16),
                           padding: EdgeInsets.symmetric(
                             horizontal: 16,
                             vertical: 25,
                           ),
-                          // margin: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
@@ -100,7 +120,6 @@ class _ProfileState extends State<Profile> {
 
                               //avatar
                               Container(
-                                // padding: const EdgeInsets.all(3),
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   border: Border.all(
@@ -109,10 +128,10 @@ class _ProfileState extends State<Profile> {
                                   ),
                                   color: Colors.white,
                                 ),
-                                child: const CircleAvatar(
+                                child: CircleAvatar(
                                   radius: 50,
                                   backgroundImage: AssetImage(
-                                    "assets/images/avatars/logodb2.jpg",
+                                    "assets/images/avatars/user-avatars-${user.avatarIndex}.jpg",
                                   ),
                                 ),
                               ),
@@ -120,13 +139,21 @@ class _ProfileState extends State<Profile> {
 
                               //nama user
                               Text(
-                                "USER NAME",
+                                user.name,
                                 style: TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
-                              Text("Karyawan"),
+
+                              //role (jika admin tulis "Admin", selain itu "Karyawan")
+                              Text(
+                                    user.role.toLowerCase() == 'admin' ? "Admin" : "Karyawan",
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
                               SizedBox(height: 32),
 
                               //row email
@@ -142,7 +169,7 @@ class _ProfileState extends State<Profile> {
                                     ),
                                   ),
                                   Spacer(),
-                                  Text("username@gmail.com"),
+                                  Text(user.email),
                                 ],
                               ),
                               SizedBox(height: 12),
@@ -160,7 +187,8 @@ class _ProfileState extends State<Profile> {
                                     ),
                                   ),
                                   Spacer(),
-                                  Text("12 Mei 2026"),
+                                  // Text("12 Mei 2026"),
+                                  // Text(formatJoinedDate(user.createdAt)),
                                 ],
                               ),
                               SizedBox(height: 40),
@@ -176,7 +204,7 @@ class _ProfileState extends State<Profile> {
                                   borderRadius: BorderRadius.circular(9999),
                                 ),
                                 child: Text(
-                                  "1000 XP",
+                                  "${user.xp} XP",
                                   style: TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.bold,
@@ -193,7 +221,7 @@ class _ProfileState extends State<Profile> {
                     //3 kotak statistik
                     IntrinsicHeight(
                       child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           //progress
                           Expanded(
@@ -280,7 +308,7 @@ class _ProfileState extends State<Profile> {
                                   Spacer(),
                                   SizedBox(height: 8),
                                   Text(
-                                    "Level\nSelesai",
+                                    "Level Selesai",
                                     style: TextStyle(fontSize: 13),
                                     textAlign: TextAlign.center,
                                   ),
@@ -300,55 +328,55 @@ class _ProfileState extends State<Profile> {
                           SizedBox(width: 12),
 
                           //chapter
-                          Expanded(
-                            flex: 1,
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 26,
-                              ),
-                              // padding: EdgeInsets.all(26),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: AppColors.borderCream,
-                                ),
-                              ),
-                              child: Column(
-                                children: [
-                                  Container(
-                                    padding: EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: AppColors.blueComponent.withValues(
-                                        alpha: 0.20,
-                                      ),
-                                    ),
-                                    child: Icon(
-                                      Icons.menu_book_outlined,
-                                      color: Color(0xFF00687B),
-                                    ),
-                                  ),
-                                  Spacer(),
-                                  SizedBox(height: 8),
-                                  Text(
-                                    "Chapter",
-                                    style: TextStyle(fontSize: 13),
-                                  ),
-                                  Spacer(),
-                                  SizedBox(height: 8),
-                                  Text(
-                                    "4",
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
+                          // Expanded(
+                          //   flex: 1,
+                          //   child: Container(
+                          //     padding: EdgeInsets.symmetric(
+                          //       horizontal: 16,
+                          //       vertical: 26,
+                          //     ),
+                          //     // padding: EdgeInsets.all(26),
+                          //     decoration: BoxDecoration(
+                          //       color: Colors.white,
+                          //       borderRadius: BorderRadius.circular(12),
+                          //       border: Border.all(
+                          //         color: AppColors.borderCream,
+                          //       ),
+                          //     ),
+                          //     child: Column(
+                          //       children: [
+                          //         Container(
+                          //           padding: EdgeInsets.all(10),
+                          //           decoration: BoxDecoration(
+                          //             shape: BoxShape.circle,
+                          //             color: AppColors.blueComponent.withValues(
+                          //               alpha: 0.20,
+                          //             ),
+                          //           ),
+                          //           child: Icon(
+                          //             Icons.menu_book_outlined,
+                          //             color: Color(0xFF00687B),
+                          //           ),
+                          //         ),
+                          //         Spacer(),
+                          //         SizedBox(height: 8),
+                          //         Text(
+                          //           "Chapter",
+                          //           style: TextStyle(fontSize: 13),
+                          //         ),
+                          //         Spacer(),
+                          //         SizedBox(height: 8),
+                          //         Text(
+                          //           "4",
+                          //           style: TextStyle(
+                          //             fontSize: 20,
+                          //             fontWeight: FontWeight.bold,
+                          //           ),
+                          //         ),
+                          //       ],
+                          //     ),
+                          //   ),
+                          // ),
                         ],
                       ),
                     ),

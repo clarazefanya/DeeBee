@@ -1,4 +1,6 @@
 import 'package:deebee_user/constants/colors.dart';
+import 'package:deebee_user/database/preference_handler.dart';
+import 'package:deebee_user/database/user_repository.dart';
 import 'package:flutter/material.dart';
 
 // TEXTFORMFIELD LOGIN REGISTER
@@ -157,7 +159,7 @@ class DropdownFieldComponent extends StatelessWidget {
 class ButtonComponent extends StatefulWidget {
   final String text;
   final Color bgcolor;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   const ButtonComponent({
     super.key,
@@ -205,6 +207,9 @@ class DeebeeAppbar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    //Ambil avatar index dari SharedPreferences
+    final int currentAvatarIndex = PreferenceHandler.avatarIndex;
+
     return AppBar(
       automaticallyImplyLeading: false,
       backgroundColor: AppColors.background,
@@ -239,12 +244,25 @@ class DeebeeAppbar extends StatelessWidget implements PreferredSizeWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text("1000 XP", style: TextStyle(fontWeight: FontWeight.bold)),
+              //bungkus XP dengan FutureBuilder agar datanya real-time dari DB
+              FutureBuilder<int>(
+                future: UserRepository().getUserXp(),
+                builder: (context, snapshot) {
+                  //jika sukses tampilkan data, jika masih loading tampilkan tanda "-"
+                  String xpText = snapshot.hasData
+                      ? "${snapshot.data} XP"
+                      : "- XP";
+                  return Text(
+                    xpText,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  );
+                },
+              ),
               SizedBox(width: 8),
               CircleAvatar(
                 radius: 15,
                 backgroundImage: AssetImage(
-                  "assets/images/avatars/logodb2.jpg",
+                  "assets/images/avatars/user-avatars-$currentAvatarIndex.jpg",
                 ),
               ),
             ],

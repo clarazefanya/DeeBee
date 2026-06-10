@@ -1,11 +1,11 @@
 import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/database/preference_handler.dart';
+import 'package:deebee_user/database/user_repository.dart';
 import 'package:deebee_user/extension/navigator.dart';
 import 'package:deebee_user/views/bottom_navbar.dart';
 import 'package:deebee_user/views/register.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -19,56 +19,6 @@ class _LoginState extends State<Login> {
   final _loginFormKey = GlobalKey<FormState>();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-
-  // Function button login
-  void login() async {
-    // //jalankan validator Form
-    // if (!_loginFormKey.currentState!.validate()) {
-    //   return;
-    // }
-
-    // //panggil database helper, read
-    // final pengguna = await DBHelper().loginUser(
-    //   emailController.text.trim(),
-    //   passwordController.text,
-    // );
-
-    // //cek apakah widget masih terpasang (mounted) sebelum menggunakan context
-    // if (!mounted) return;
-
-    // //cek hasil login
-    // if (pengguna != null) {
-    //   //LOGIN BERHASIL
-    // ubah status menjadi setLogin(true), lanjut ke halaman realtime_list
-    // await PreferenceHandler.setLogin(true);
-    // if (!mounted) return;
-    // context.pushReplacement(Home());
-    // } else {
-    //   //LOGIN GAGAL
-    //   ScaffoldMessenger.of(
-    //     context,
-    //   ).showSnackBar(SnackBar(content: Text('Email atau password salah')));
-    // }
-
-    if (_loginFormKey.currentState!.validate()) {
-      //ubah status menjadi setLogin(true) lalu arahkan ke Home.
-      await PreferenceHandler.setLogin(true);
-      if (!mounted) return;
-      //ke halaman home (bottom navbar)
-      context.pushReplacement(BottomNavBar());
-    } else {
-      //toast message
-      Fluttertoast.showToast(
-        msg: "Silakan periksa kembali",
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-        timeInSecForIosWeb: 1,
-        backgroundColor: Colors.red,
-        textColor: Colors.white,
-        fontSize: 16.0,
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -215,5 +165,53 @@ class _LoginState extends State<Login> {
         ),
       ),
     );
+  }
+
+  // Function button login
+  void login() async {
+    //Jalankan validator Form
+    if (!_loginFormKey.currentState!.validate()) {
+      return;
+    }
+
+    //Panggil loginUser() di UserRepository, read
+    final pengguna = await UserRepository().loginUser(
+      emailController.text.trim(),
+      passwordController.text,
+    );
+
+    //Cek apakah widget masih terpasang (mounted) sebelum menggunakan context
+    if (!mounted) return;
+
+    //Cek hasil login
+    if (pengguna != null) {
+      //cek apakah user sedang di-banned
+      if (!pengguna.isActive) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Akun Anda telah dinonaktifkan oleh admin.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return; //tidak bisa login
+      }
+
+      // LOGIN BERHASIL & USER AKTIF
+      //simpan data ke preferences
+      await PreferenceHandler.setLogin(true); //login true
+      await PreferenceHandler.setUserId(pengguna.id!); //simpan ID
+      await PreferenceHandler.setRole(pengguna.role); //simpan role
+      await PreferenceHandler.setAvatarIndex(
+        pengguna.avatarIndex,
+      ); //simpan avatar
+
+      if (!mounted) return;
+      context.pushReplacement(BottomNavBar());
+    } else {
+      // LOGIN GAGAL (Email atau password salah)
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Email atau password salah')),
+      );
+    }
   }
 }

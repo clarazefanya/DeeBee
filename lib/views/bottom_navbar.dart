@@ -1,5 +1,6 @@
 import 'package:deebee_user/constants/colors.dart';
-import 'package:deebee_user/models/home_mode.dart';
+import 'package:deebee_user/database/preference_handler.dart';
+import 'package:deebee_user/models/home_mode_model.dart';
 import 'package:deebee_user/views/Home/home.dart';
 import 'package:deebee_user/views/profile.dart';
 import 'package:flutter/material.dart';
@@ -13,11 +14,13 @@ class BottomNavBar extends StatefulWidget {
 
 class _BottomNavBarState extends State<BottomNavBar> {
   int _selectedIndex = 0;
-  String role = "admin"; //var role
+
+  //Ambil data role dari preference
+  final userRole = PreferenceHandler.role;
 
   List<Widget> get _listHalaman => [
     const Home(mode: HomeMode.user),
-    if (role == 'admin') const Home(mode: HomeMode.admin),
+    const Home(mode: HomeMode.admin),
     placeholderLB(),
     const Profile(),
   ];
@@ -68,7 +71,8 @@ class _BottomNavBarState extends State<BottomNavBar> {
           child: BottomNavigationBar(
             items: <BottomNavigationBarItem>[
               _buildNavItem(Icons.home, 'Home'),
-              if (role == 'admin') _buildNavItem(Icons.assignment_ind, 'Admin'),
+              if (userRole == 'admin')
+                _buildNavItem(Icons.assignment_ind, 'Admin'),
               _buildNavItem(Icons.leaderboard, 'Leaderboard'),
               _buildNavItem(Icons.person, 'Profil'),
             ],

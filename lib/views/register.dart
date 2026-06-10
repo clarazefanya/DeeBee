@@ -1,9 +1,10 @@
 import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/constants/colors.dart';
+import 'package:deebee_user/database/user_repository.dart';
 import 'package:deebee_user/extension/navigator.dart';
+import 'package:deebee_user/models/user_model.dart';
 import 'package:deebee_user/views/login.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 
 class Register extends StatefulWidget {
   const Register({super.key});
@@ -15,9 +16,9 @@ class Register extends StatefulWidget {
 class _RegisterState extends State<Register> {
   //foto avatars
   List<String> avatars = [
+    'assets/images/avatars/user-avatars-0.jpg',
     'assets/images/avatars/user-avatars-1.jpg',
     'assets/images/avatars/user-avatars-2.jpg',
-    'assets/images/avatars/logodb2.jpg',
   ];
   int selectedAvatar = 0;
 
@@ -28,59 +29,6 @@ class _RegisterState extends State<Register> {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmpasswordController =
       TextEditingController();
-
-  // Function button register
-  void register() async {
-    // //jalankan validator form
-    // if (!_registerFormKey.currentState!.validate()) {
-    //   return;
-    // }
-
-    // //buat model user
-    // final user = UserModelSql(
-    //   name: nameController.text.trim(),
-    //   email: emailController.text.trim(),
-    //   password: passwordController.text,
-    //   avatarIndex: selectedAvatar,
-    // );
-
-    // //panggil database helper, create
-    // bool success = await DBHelper().registerUser(user);
-
-    // //cek apakah widget masih terpasang (mounted) sebelum menggunakan context
-    // if (!mounted) return;
-
-    // //cek hasil register
-    // if (success) {
-    //   //create berhasil
-    //   ScaffoldMessenger.of(
-    //     context,
-    //   ).showSnackBar(SnackBar(content: Text("Register berhasil")));
-    //   context.push(Login());
-    // }
-    // else {
-    //   //create gagal
-    //   ScaffoldMessenger.of(
-    //     context,
-    //   ).showSnackBar(SnackBar(content: Text("Email sudah terdaftar")));
-    // }
-
-    if (_registerFormKey.currentState!.validate()) {
-      //ke halaman login
-      context.pushReplacement(Login());
-    } else {
-      //toast message
-      Fluttertoast.showToast(
-        msg: "Silakan periksa kembali",
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-        timeInSecForIosWeb: 1,
-        backgroundColor: Colors.red,
-        textColor: Colors.white,
-        fontSize: 16.0,
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -313,5 +261,50 @@ class _RegisterState extends State<Register> {
         ),
       ),
     );
+  }
+
+  // Function button register
+  void register() async {
+    // Jalankan validator form
+    if (!_registerFormKey.currentState!.validate()) {
+      return;
+    }
+
+    // Dapatkan waktu lokal saat ini
+    String currentTime = DateTime.now().toLocal().toIso8601String();
+
+    // Buat model user
+    final user = UserModel(
+      name: nameController.text.trim(),
+      email: emailController.text.trim(),
+      password: passwordController.text,
+      avatarIndex: selectedAvatar,
+      role: 'user', // role saat register pasti "user"
+      isActive: true,
+      createdAt: currentTime,
+      xp: 0,
+    );
+
+    // Panggil fungsi registerUser di UserRepository, create
+    bool success = await UserRepository().registerUser(user);
+
+    // Cek apakah widget masih terpasang (mounted) sebelum menggunakan context
+    if (!mounted) return;
+
+    // Cek hasil register
+    if (success) {
+      // Create berhasil
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Register berhasil")));
+      context.push(Login());
+    } else {
+      // Create gagal
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Email sudah terdaftar atau terjadi kesalahan"),
+        ),
+      );
+    }
   }
 }

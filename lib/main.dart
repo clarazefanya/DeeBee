@@ -1,5 +1,5 @@
 import 'package:deebee_user/database/preference_handler.dart';
-import 'package:deebee_user/views/bottom_navbar.dart';
+import 'package:deebee_user/views/splashscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
@@ -39,7 +39,8 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: BottomNavBar(),
+      // home: Gameplay(gameplayType: GameplayType.sqlInput),
+      home: SplashScreen(),
     );
   }
 }

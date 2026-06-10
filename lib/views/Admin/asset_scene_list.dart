@@ -64,7 +64,6 @@ class AssetSceneList extends StatelessWidget {
             //listtile asset scene list
             Expanded(
               child: ListView.separated(
-                // padding: EdgeInsets.zero,
                 padding: EdgeInsets.only(bottom: 50),
                 itemCount: dummyImages.length,
                 separatorBuilder: (context, index) =>

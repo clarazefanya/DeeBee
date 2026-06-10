@@ -1,6 +1,6 @@
 import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/constants/colors.dart';
-import 'package:deebee_user/models/home_mode.dart';
+import 'package:deebee_user/models/home_mode_model.dart';
 import 'package:deebee_user/views/Admin/asset_scene.dart';
 import 'package:deebee_user/views/Admin/drawer_admin.dart';
 import 'package:deebee_user/views/Admin/user_management.dart';
