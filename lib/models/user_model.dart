@@ -32,6 +32,10 @@ class UserModel {
       'email': email,
       'password': password,
       'avatar_index': avatarIndex,
+      'role': role,
+      'is_active': isActive ? 1 : 0,
+      'created_at': createdAt,
+      'last_level_id': lastLevelId,
       'xp': xp,
     };
   }

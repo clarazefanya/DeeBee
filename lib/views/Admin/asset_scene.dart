@@ -13,8 +13,8 @@ class AssetScene extends StatefulWidget {
 class _AssetSceneState extends State<AssetScene> {
   @override
   Widget build(BuildContext context) {
-    //test data asset scene
-    final List<String> assets = ['Background', 'Karakter'];
+    //data asset scene
+    final List<String> category = ['Background', 'Karakter'];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -34,8 +34,8 @@ class _AssetSceneState extends State<AssetScene> {
               const SizedBox(height: 24),
 
               //listtile asset scene
-              ...assets.map(
-                (asset) => Card(
+              ...category.map(
+                (category) => Card(
                   margin: const EdgeInsets.only(bottom: 12),
                   elevation: 2,
                   shape: RoundedRectangleBorder(
@@ -43,7 +43,7 @@ class _AssetSceneState extends State<AssetScene> {
                   ),
                   child: ListTile(
                     title: Text(
-                      asset,
+                      category,
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
@@ -51,7 +51,7 @@ class _AssetSceneState extends State<AssetScene> {
                     ),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () {
-                      context.push(AssetSceneList(category: asset));
+                      context.push(AssetSceneList(category: category));
                     },
                   ),
                 ),

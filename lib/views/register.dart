@@ -287,6 +287,7 @@ class _RegisterState extends State<Register> {
 
     // Panggil fungsi registerUser di UserRepository, create
     bool success = await UserRepository().registerUser(user);
+    print("sukses: $success");
 
     // Cek apakah widget masih terpasang (mounted) sebelum menggunakan context
     if (!mounted) return;
@@ -294,6 +295,7 @@ class _RegisterState extends State<Register> {
     // Cek hasil register
     if (success) {
       // Create berhasil
+      print("berhasil");
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Register berhasil")));

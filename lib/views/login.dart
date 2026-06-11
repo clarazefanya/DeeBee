@@ -189,7 +189,7 @@ class _LoginState extends State<Login> {
       if (!pengguna.isActive) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Akun Anda telah dinonaktifkan oleh admin.'),
+            content: Text('Akun Anda telah dinonaktifkan.'),
             backgroundColor: Colors.red,
           ),
         );

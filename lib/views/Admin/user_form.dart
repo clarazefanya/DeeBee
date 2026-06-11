@@ -1,12 +1,16 @@
 import 'package:deebee_user/components/components.dart'; // Sesuaikan import kamu
 import 'package:deebee_user/constants/colors.dart';
+import 'package:deebee_user/database/preference_handler.dart';
+import 'package:deebee_user/database/user_repository.dart';
 import 'package:deebee_user/extension/navigator.dart';
+import 'package:deebee_user/models/user_model.dart';
 import 'package:flutter/material.dart';
 
 class UserFormPage extends StatefulWidget {
   final String title; // "Buat Pengguna Baru" atau "Edit Pengguna"
+  final UserModel? user; // null jika Create, terisi jika Edit
 
-  const UserFormPage({super.key, required this.title});
+  const UserFormPage({super.key, required this.title, this.user});
 
   @override
   State<UserFormPage> createState() => _UserFormPageState();
@@ -23,11 +27,27 @@ class _UserFormPageState extends State<UserFormPage> {
   final List<String> _listRole = ['user', 'admin'];
 
   List<String> avatars = [
+    'assets/images/avatars/user-avatars-0.jpg',
     'assets/images/avatars/user-avatars-1.jpg',
     'assets/images/avatars/user-avatars-2.jpg',
-    'assets/images/avatars/logodb2.jpg',
   ];
   int selectedAvatar = 0;
+
+  int _statusAktif = 1; //radio button status
+
+  // Jika widget.user ada isinya (Mode Edit), isi semua field secara otomatis
+  @override
+  void initState() {
+    super.initState();
+    if (widget.user != null) {
+      nameController.text = widget.user!.name;
+      emailController.text = widget.user!.email;
+      passwordController.text = widget.user!.password;
+      _selectedRole = widget.user!.role.toLowerCase();
+      selectedAvatar = widget.user!.avatarIndex;
+      _statusAktif = widget.user!.isActive ? 1 : 0;
+    }
+  }
 
   @override
   void dispose() {
@@ -36,6 +56,9 @@ class _UserFormPageState extends State<UserFormPage> {
     passwordController.dispose();
     super.dispose();
   }
+
+  //Ambil userId dari SharedPreferences (tdk bisa hapus diri sendiri)
+  final int? currentUserId = PreferenceHandler.userId;
 
   @override
   Widget build(BuildContext context) {
@@ -157,6 +180,32 @@ class _UserFormPageState extends State<UserFormPage> {
                 ),
                 const SizedBox(height: 16),
 
+                // Radio button status
+                const Text(
+                  "Status",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                RadioGroup<int>(
+                  groupValue: _statusAktif,
+                  onChanged: (value) {
+                    setState(() {
+                      _statusAktif = value!;
+                    });
+                  },
+                  child: Row(
+                    children: [
+                      Radio<int>(value: 1),
+                      const Text("Aktif"),
+
+                      const SizedBox(width: 16),
+
+                      Radio<int>(value: 0),
+                      const Text("Nonaktif"),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+
                 // Pilih Avatar
                 const Text(
                   "Pilih Avatar",
@@ -209,11 +258,7 @@ class _UserFormPageState extends State<UserFormPage> {
                     ButtonComponent(
                       text: "Simpan",
                       bgcolor: AppColors.primaryHoney,
-                      onPressed: () {
-                        if (_userFormKey.currentState!.validate()) {
-                          // Logic insert/update database nanti di sini
-                        }
-                      },
+                      onPressed: save,
                     ),
 
                     // Tombol Hapus (Hanya muncul saat mode Edit, create tidak)
@@ -223,7 +268,18 @@ class _UserFormPageState extends State<UserFormPage> {
                         text: "Hapus Pengguna",
                         bgcolor: AppColors.redComponent,
                         onPressed: () {
-                          // Logic hapus database nanti di sini
+                          if (currentUserId == widget.user!.id) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Tidak dapat menghapus diri sendiri',
+                                ),
+                              ),
+                            );
+                            return;
+                          } else {
+                            confirmDelete;
+                          }
                         },
                       ),
                       const SizedBox(width: 12),
@@ -235,6 +291,92 @@ class _UserFormPageState extends State<UserFormPage> {
           ),
         ),
       ),
+    );
+  }
+
+  //function tombol simpan
+  void save() async {
+    if (_userFormKey.currentState!.validate()) {
+      // BIKIN MODEL BARU DARI INPUTAN
+      final formUser = UserModel(
+        id: widget.user?.id, // ID null jika create, ada isi jika edit
+        name: nameController.text.trim(),
+        email: emailController.text.trim(),
+        password: passwordController.text,
+        avatarIndex: selectedAvatar,
+        role: _selectedRole!,
+        isActive: _statusAktif == 1, // Konversi int ke boolean
+        // Jika mode Edit, pertahankan data lama. Jika Create, set nilai awal.
+        createdAt:
+            widget.user?.createdAt ??
+            DateTime.now().toLocal().toIso8601String(),
+        lastLevelId: widget.user?.lastLevelId,
+        xp: widget.user?.xp ?? 0,
+      );
+
+      bool isSuccess = false;
+      if (widget.user == null) {
+        // MODE CREATE: Panggil fungsi register
+        isSuccess = await UserRepository().registerUser(formUser);
+      } else {
+        // MODE EDIT: Panggil fungsi update
+        int rowsAffected = await UserRepository().updateUser(formUser);
+        isSuccess = rowsAffected > 0;
+      }
+
+      if (!context.mounted) return;
+      if (isSuccess) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Data berhasil disimpan!")),
+        );
+        context.pop(true);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Email sudah dipakai atau Gagal menyimpan data"),
+          ),
+        );
+      }
+    }
+  }
+
+  //function tombol hapus pengguna
+  void confirmDelete() {
+    //tampilkan dialog konfirmasi
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text("Konfirmasi Hapus"),
+          content: const Text("Yakin ingin menghapus pengguna ini?"),
+          actions: [
+            // Tombol Batal
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext); // Tutup dialog saja
+              },
+              child: const Text("Batal"),
+            ),
+            // Tombol Ya
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(dialogContext); // Tutup dialog dulu
+
+                // Jalankan fungsi delete
+                await UserRepository().deleteUser(widget.user!.id!);
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Pengguna berhasil dihapus")),
+                );
+
+                context.pop(true);
+              },
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text("Ya, Hapus"),
+            ),
+          ],
+        );
+      },
     );
   }
 }

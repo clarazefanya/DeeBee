@@ -24,14 +24,23 @@ class UserRepository {
   Future<UserModel?> loginUser(String email, String password) async {
     final db = await _dbHelper.database;
 
+    final semuaUser = await db.query('users');
+    print('SEMUA USER:');
+    print(semuaUser);
+
     final List<Map<String, dynamic>> results = await db.query(
       'users',
       where: 'email = ? AND password = ?',
       whereArgs: [email, password],
     );
 
+    print('EMAIL INPUT: $email');
+    print('PASSWORD INPUT: $password');
+    print('HASIL QUERY: ${results.length}');
+
     if (results.isNotEmpty) {
       // Mengembalikan UserModel semua kolom
+      print(results.first);
       return UserModel.fromMap(results.first);
     }
     return null;
@@ -57,7 +66,7 @@ class UserRepository {
     return 0;
   }
 
-  // profil data user (READ)
+  // Mengambil profil data user (READ)
   Future<UserModel?> getUserById(int id) async {
     final db = await _dbHelper.database;
 
@@ -71,6 +80,31 @@ class UserRepository {
       return UserModel.fromMap(results.first);
     }
     return null;
+  }
+
+  // Mengambil semua data user (READ)
+  Future<List<UserModel>> getAllUsers() async {
+    final db = await _dbHelper.database;
+    final List<Map<String, dynamic>> results = await db.query('users');
+
+    return results.map((map) => UserModel.fromMap(map)).toList();
+  }
+
+  // update user/profile (UPDATE)
+  Future<int> updateUser(UserModel user) async {
+    final db = await _dbHelper.database;
+    return await db.update(
+      'users',
+      user.toMap(),
+      where: 'id = ?',
+      whereArgs: [user.id],
+    );
+  }
+
+  // delete user (DELETE)
+  Future<int> deleteUser(int id) async {
+    final db = await _dbHelper.database;
+    return await db.delete('users', where: 'id = ?', whereArgs: [id]);
   }
 
   // TODO: Nanti fungsi login (READ), update profile (UPDATE),
