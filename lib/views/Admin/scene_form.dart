@@ -1,9 +1,17 @@
+import 'dart:typed_data';
+
 import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/constants/colors.dart';
+import 'package:deebee_user/database/repository/asset_scene_repository.dart';
+import 'package:deebee_user/database/repository/scene_repository.dart';
 import 'package:deebee_user/extension/navigator.dart';
+import 'package:deebee_user/models/asset_scene_model.dart';
+import 'package:deebee_user/models/scene_model.dart';
 import 'package:flutter/material.dart';
 
 class SceneForm extends StatefulWidget {
+  final int levelId;
+  final SceneModel? scene; //untuk pembeda Create / Edit
   final String nomorLevel;
   final String nomorScene;
   final String title;
@@ -11,6 +19,8 @@ class SceneForm extends StatefulWidget {
 
   const SceneForm({
     super.key,
+    required this.levelId,
+    this.scene,
     required this.nomorLevel,
     required this.nomorScene,
     required this.title,
@@ -23,50 +33,91 @@ class SceneForm extends StatefulWidget {
 
 class _SceneCreateFormState extends State<SceneForm> {
   final _sceneFormKey = GlobalKey<FormState>();
+  final _sceneRepo = SceneRepository();
+  final _assetRepo = AssetSceneRepository();
 
   //Controllers untuk TextFieldComponent
   final _namaKarakterCont = TextEditingController();
   final _dialogCont = TextEditingController();
-  final _pertanyaanCont = TextEditingController();
   final _kalimatOpsionalCont = TextEditingController();
+  final _pertanyaanCont = TextEditingController();
+
   final _opsiACont = TextEditingController();
   final _opsiBCont = TextEditingController();
   final _opsiCCont = TextEditingController();
+
   final _jawabanTextCont = TextEditingController();
   final _hadiahXpCont = TextEditingController();
 
   //var dropdown
-  String? _selectedBackground;
-  String? _selectedKarakter;
-  String? _selectedTipeScene;
-  String? _kunciJawabanPG;
+  int? _selectedBackgroundId;
+  int? _selectedKarakterId;
+  String? _selectedTipeScene =
+      'Dialog'; //'Dialog', 'Pilihan ganda', 'Susun kata', 'Tulis SQL',
+  String? _kunciJawabanPG; //A, B, C
 
-  //jika isIntro true, kunci nilai tipe scene ke 'dialog'
-  @override
-  void initState() {
-    super.initState();
-    if (widget.isIntro) {
-      _selectedTipeScene = 'dialog';
-    }
-  }
+  // List untuk menampung data dari Database
+  List<AssetSceneModel> _listBackground = [];
+  List<AssetSceneModel> _listKarakter = [];
 
-  //dummy data list
-  final List<String> _listBackground = [
-    'Lab Komputer',
-    'Kelas SQL',
-    'Server Room',
-  ];
-  final List<String> _listKarakter = [
-    'Alex (Guru)',
-    'Budi (Siswa)',
-    'Siti (Sembunyi)',
-  ];
+  // pilihan tipe scene
   final List<String> _listTipeScene = [
     'Dialog',
     'Pilihan ganda',
     'Susun kata',
     'Tulis SQL',
   ];
+
+  // Indikator loading data DB
+  bool _isLoadingAssets = true;
+  @override
+  void initState() {
+    super.initState();
+    _loadAssetData();
+  }
+
+  // Fungsi untuk mengambil data dari DB asset_scene
+  void _loadAssetData() async {
+    try {
+      final backgrounds = await _assetRepo.getAssetSceneByCategory(
+        "Background",
+      );
+      final karakters = await _assetRepo.getAssetSceneByCategory("Karakter");
+
+      setState(() {
+        _listBackground = backgrounds;
+        _listKarakter = karakters;
+
+        // Jika dalam mode EDIT, pasang nilai lama dari data scene ke dropdown ID
+        if (widget.scene != null) {
+          final s = widget.scene!;
+          _namaKarakterCont.text = s.charName ?? '';
+          _dialogCont.text = s.charDialog ?? '';
+          _kalimatOpsionalCont.text = s.optionalSentence ?? '';
+          _pertanyaanCont.text = s.question ?? '';
+          _opsiACont.text = s.optionA ?? '';
+          _opsiBCont.text = s.optionB ?? '';
+          _opsiCCont.text = s.optionC ?? '';
+          _jawabanTextCont.text = s.answerKey ?? '';
+          _hadiahXpCont.text = s.rewardXp.toString();
+
+          _selectedBackgroundId = s.bgImageId;
+          _selectedKarakterId = s.charImageId;
+          _selectedTipeScene = s.sceneType;
+          _kunciJawabanPG = s.answerKeyMultipleChoice;
+        } else {
+          if (widget.isIntro) {
+            _selectedTipeScene = 'Dialog';
+          }
+        }
+        _isLoadingAssets = false; // Loading selesai
+      });
+    } catch (e) {
+      // Handle error jika gagal fetch data
+      setState(() => _isLoadingAssets = false);
+      print("Error loading assets: $e");
+    }
+  }
 
   //bersihkan memori ketika halaman ditutup atau tidak lagi digunakan.
   @override
@@ -83,8 +134,28 @@ class _SceneCreateFormState extends State<SceneForm> {
     super.dispose();
   }
 
+  //helper preview dropdown background/karakter
+  Uint8List? _getAssetBytes(int? selectedId, List<AssetSceneModel> assetList) {
+    if (selectedId == null) return null;
+    try {
+      // Cari asset yang ID-nya cocok, lalu ambil field image-nya
+      final asset = assetList.firstWhere((element) => element.id == selectedId);
+      return asset.image;
+    } catch (e) {
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Jika data asset dari DB belum selesai dimuat, tampilkan loading spinner
+    if (_isLoadingAssets) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: DeebeeAppbar(),
@@ -144,13 +215,18 @@ class _SceneCreateFormState extends State<SceneForm> {
                   "Pilih Gambar Background",
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                DropdownFieldComponent(
-                  value: _selectedBackground,
-                  hinttext: 'Pilih Gambar Background',
+                _buildAssetDropdown(
+                  value: _selectedBackgroundId,
+                  hintText: 'Pilih Gambar Background',
                   items: _listBackground,
-                  onChanged: (val) => setState(() => _selectedBackground = val),
+                  onChanged: (val) =>
+                      setState(() => _selectedBackgroundId = val),
                   validator: (val) =>
                       val == null ? 'Wajib pilih gambar background' : null,
+                ),
+                //Preview dropdown background
+                _buildImagePreview(
+                  _getAssetBytes(_selectedBackgroundId, _listBackground),
                 ),
                 const SizedBox(height: 16),
 
@@ -159,13 +235,17 @@ class _SceneCreateFormState extends State<SceneForm> {
                   "Pilih Gambar Karakter",
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                DropdownFieldComponent(
-                  value: _selectedKarakter,
-                  hinttext: 'Pilih Gambar Karakter',
+                _buildAssetDropdown(
+                  value: _selectedKarakterId,
+                  hintText: 'Pilih Gambar Karakter',
                   items: _listKarakter,
-                  onChanged: (val) => setState(() => _selectedKarakter = val),
+                  onChanged: (val) => setState(() => _selectedKarakterId = val),
                   validator: (val) =>
                       val == null ? 'Wajib pilih gambar karakter' : null,
+                ),
+                //Preview dropdown karakter
+                _buildImagePreview(
+                  _getAssetBytes(_selectedKarakterId, _listKarakter),
                 ),
                 const SizedBox(height: 16),
 
@@ -187,19 +267,6 @@ class _SceneCreateFormState extends State<SceneForm> {
                   hinttext: 'Dialog',
                   lines: 3,
                   textFieldCont: _dialogCont,
-                  textFieldVal: (val) => val!.isEmpty ? 'Wajib diisi' : null,
-                ),
-                const SizedBox(height: 16),
-
-                // Pertanyaan
-                Text(
-                  "Pertanyaan",
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                TextFieldComponent(
-                  hinttext: 'Pertanyaan',
-                  lines: 3,
-                  textFieldCont: _pertanyaanCont,
                   textFieldVal: (val) => val!.isEmpty ? 'Wajib diisi' : null,
                 ),
                 const SizedBox(height: 16),
@@ -235,6 +302,9 @@ class _SceneCreateFormState extends State<SceneForm> {
                 ],
 
                 if (_selectedTipeScene == 'Pilihan ganda') ...[
+                  // Pertanyaan
+                  _buildQuestion(),
+
                   _buildRowOpsi('A', _opsiACont),
                   _buildRowOpsi('B', _opsiBCont),
                   _buildRowOpsi('C', _opsiCCont),
@@ -253,11 +323,15 @@ class _SceneCreateFormState extends State<SceneForm> {
                         val == null ? 'Wajib pilih kunci jawaban' : null,
                   ),
                   const SizedBox(height: 16),
+                  //hadiah XP
                   _buildFieldXP(),
                 ],
 
                 if (_selectedTipeScene == 'Susun kata' ||
                     _selectedTipeScene == 'Tulis SQL') ...[
+                  // Pertanyaan
+                  _buildQuestion(),
+
                   Text(
                     "Kunci Jawaban",
                     style: TextStyle(fontWeight: FontWeight.bold),
@@ -265,12 +339,13 @@ class _SceneCreateFormState extends State<SceneForm> {
                   TextFieldComponent(
                     lines: 5,
                     hinttext: _selectedTipeScene == 'Tulis SQL'
-                        ? 'Kunci Query SQL'
-                        : 'Kunci Susun Kata',
+                        ? 'Kunci Query SQL (HANYA BISA SELECT)'
+                        : 'Kunci Susun Kata (HANYA BISA SELECT)',
                     textFieldCont: _jawabanTextCont,
                     textFieldVal: (val) => val!.isEmpty ? 'Wajib diisi' : null,
                   ),
                   const SizedBox(height: 16),
+                  //hadiah XP
                   _buildFieldXP(),
                 ],
                 const SizedBox(height: 32),
@@ -279,17 +354,101 @@ class _SceneCreateFormState extends State<SceneForm> {
                 ButtonComponent(
                   text: "Simpan",
                   bgcolor: AppColors.primaryHoney,
-                  onPressed: () {
-                    if (_sceneFormKey.currentState!.validate()) {
-                      // Jalankan fungsi simpan
-                    }
-                  },
+                  onPressed: createSaveScene,
                 ),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  // method dropdown background dan karakter
+  Widget _buildAssetDropdown({
+    required int? value,
+    required String hintText,
+    required List<AssetSceneModel> items,
+    required ValueChanged<int?> onChanged,
+    required String? Function(int?)? validator,
+  }) {
+    return DropdownButtonFormField<int>(
+      initialValue: value,
+      hint: Text(
+        hintText,
+        style: const TextStyle(color: Color(0xFF626566), fontSize: 14),
+      ),
+      // Memetakan objek AssetSceneModel ke DropdownMenuItem<int>
+      items: items.map((asset) {
+        return DropdownMenuItem<int>(
+          value: asset.id,
+          child: Text(asset.imageName),
+        );
+      }).toList(),
+      onChanged: onChanged,
+      validator: validator,
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: const Color(0xFFFFFFFF),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.borderBrown, width: 1),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.borderBrown, width: 1),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.borderBrown, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.red, width: 2),
+        ),
+      ),
+    );
+  }
+  // end method dropdown background dan karakter
+
+  // method PREVIEW dropdown background/karakter
+  Widget _buildImagePreview(Uint8List? imageBytes) {
+    if (imageBytes == null) {
+      // Jika belum pilih, tidak muncul apa-apa
+      return const SizedBox.shrink();
+    }
+    return Padding(
+      padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.memory(
+          imageBytes,
+          width: 120,
+          height: 80,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) {
+            return const Text(
+              "Gagal memuat gambar",
+              style: TextStyle(color: Colors.red, fontSize: 12),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Column _buildQuestion() {
+    return Column(
+      children: [
+        Text("Pertanyaan", style: TextStyle(fontWeight: FontWeight.bold)),
+        TextFieldComponent(
+          hinttext: 'Pertanyaan',
+          lines: 3,
+          textFieldCont: _pertanyaanCont,
+          textFieldVal: (val) => val!.isEmpty ? 'Wajib diisi' : null,
+        ),
+        const SizedBox(height: 16),
+      ],
     );
   }
 
@@ -332,5 +491,69 @@ class _SceneCreateFormState extends State<SceneForm> {
         ),
       ],
     );
+  }
+
+  //fungsi tombol simpan scene
+  void createSaveScene() async {
+    // Jalankan validator form
+    if (!_sceneFormKey.currentState!.validate()) {
+      return;
+    }
+
+    //buat object SceneModel
+    final scene = SceneModel(
+      id: widget
+          .scene
+          ?.id, // Jika edit, id lama akan masuk. Jika create, otomatis null.
+      levelId: widget.levelId,
+
+      bgImageId: _selectedBackgroundId,
+      charImageId: _selectedKarakterId,
+
+      charName: _namaKarakterCont.text,
+      charDialog: _dialogCont.text,
+
+      sceneType: _selectedTipeScene ?? 'Dialog',
+
+      optionalSentence: _kalimatOpsionalCont.text.isEmpty
+          ? null
+          : _kalimatOpsionalCont.text,
+
+      question: _pertanyaanCont.text.isEmpty ? null : _pertanyaanCont.text,
+
+      optionA: _opsiACont.text.isEmpty ? null : _opsiACont.text,
+      optionB: _opsiBCont.text.isEmpty ? null : _opsiBCont.text,
+      optionC: _opsiCCont.text.isEmpty ? null : _opsiCCont.text,
+
+      answerKeyMultipleChoice: _selectedTipeScene == 'Pilihan ganda'
+          ? _kunciJawabanPG
+          : null,
+      answerKey: _jawabanTextCont.text.isEmpty ? null : _jawabanTextCont.text,
+      rewardXp: _hadiahXpCont.text.isEmpty
+          ? 0
+          : (int.tryParse(_hadiahXpCont.text) ?? 0),
+    );
+
+    // Cek apakah mode Create atau Edit berdasarkan widget.scene
+    if (widget.scene == null) {
+      //jika create
+      await _sceneRepo.createScene(scene);
+    } else {
+      //jika edit
+      await _sceneRepo.updateScene(scene);
+    }
+
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          widget.scene == null
+              ? 'Scene berhasil dibuat'
+              : 'Scene berhasil diperbarui',
+        ),
+      ),
+    );
+    context.pop(true);
   }
 }

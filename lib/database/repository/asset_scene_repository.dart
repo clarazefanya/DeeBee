@@ -23,6 +23,11 @@ class AssetSceneRepository {
       orderBy: 'id DESC',
     );
 
+    // print('===== ASSET SCENE =====');
+    // for (final row in result) {
+    //   print(row);
+    // }
+
     return result.map((e) => AssetSceneModel.fromMap(e)).toList();
   }
 

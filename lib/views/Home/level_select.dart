@@ -1,22 +1,46 @@
 import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/constants/colors.dart';
+import 'package:deebee_user/database/preference_handler.dart';
+import 'package:deebee_user/database/repository/level_repository.dart';
 import 'package:deebee_user/extension/navigator.dart';
 import 'package:deebee_user/models/home_mode_model.dart';
+import 'package:deebee_user/models/level_model.dart';
 import 'package:deebee_user/views/Admin/scene_list.dart';
 import 'package:flutter/material.dart';
 
 class LevelSelect extends StatefulWidget {
-  const LevelSelect({super.key, required this.mode});
+  const LevelSelect({
+    super.key,
+    required this.mode,
+    required this.chapterId,
+    required this.chapterName,
+    required this.chapterTitle,
+    required this.chapterLongDesc,
+  });
 
   final HomeMode mode;
+  final int chapterId;
+  final String chapterName;
+  final String chapterTitle;
+  final String chapterLongDesc;
 
   @override
   State<LevelSelect> createState() => _LevelSelectState();
 }
 
 class _LevelSelectState extends State<LevelSelect> {
-  //var test gridview builder
-  int levelsLength = 8;
+  //future di level
+  late Future<List<LevelModel>> _levelsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _levelsFuture = LevelRepository().getLevelsByChapter(widget.chapterId);
+  }
+
+  //Ambil role dari SharedPreferences
+  final String? currentRole = PreferenceHandler.role;
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +69,7 @@ class _LevelSelectState extends State<LevelSelect> {
                     ),
                     SizedBox(width: 16),
                     Text(
-                      "Chapter 1",
+                      widget.chapterName,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -57,231 +81,285 @@ class _LevelSelectState extends State<LevelSelect> {
 
                 //nama chapter
                 Text(
-                  "SELECT: Menampilkan Data",
+                  widget.chapterTitle,
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
 
-                //paragraf desc chapter
-                Text(
-                  "Belajar mengambil data dari tabel menggunakan perintah SELECT dan memahami struktur query dasar.",
-                  style: TextStyle(fontSize: 14),
-                ),
+                //paragraf longDesc chapter
+                Text(widget.chapterLongDesc, style: TextStyle(fontSize: 14)),
                 SizedBox(height: 24),
 
                 //progres level
-                Container(
-                  padding: EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryCream,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.primaryHoney),
-                  ),
-                  //column tulisan dan progress bar
-                  child: Column(
-                    children: [
-                      //row text dan angka progress
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Progres  Level",
-                            style: TextStyle(
-                              color: AppColors.primaryHoney,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                          Spacer(),
-                          Text(
-                            "32%",
-                            style: TextStyle(
-                              color: AppColors.primaryHoney,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 8),
-                      LinearProgressIndicator(
-                        value: 0.32,
-                        backgroundColor: const Color(0xFFEBDFCE),
-                        color: AppColors.primaryHoney,
-                        borderRadius: BorderRadius.circular(9999),
-                        minHeight: 16,
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 24),
+                // Container(
+                //   padding: EdgeInsets.all(16),
+                //   decoration: BoxDecoration(
+                //     color: AppColors.primaryCream,
+                //     borderRadius: BorderRadius.circular(12),
+                //     border: Border.all(color: AppColors.primaryHoney),
+                //   ),
+                //   //column tulisan dan progress bar
+                //   child: Column(
+                //     children: [
+                //       //row text dan angka progress
+                //       Row(
+                //         crossAxisAlignment: CrossAxisAlignment.center,
+                //         children: [
+                //           Text(
+                //             "Progres  Level",
+                //             style: TextStyle(
+                //               color: AppColors.primaryHoney,
+                //               fontWeight: FontWeight.w600,
+                //               fontSize: 14,
+                //             ),
+                //           ),
+                //           Spacer(),
+                //           Text(
+                //             "32%",
+                //             style: TextStyle(
+                //               color: AppColors.primaryHoney,
+                //               fontWeight: FontWeight.bold,
+                //               fontSize: 14,
+                //             ),
+                //           ),
+                //         ],
+                //       ),
+                //       SizedBox(height: 8),
+                //       LinearProgressIndicator(
+                //         value: 0.32,
+                //         backgroundColor: const Color(0xFFEBDFCE),
+                //         color: AppColors.primaryHoney,
+                //         borderRadius: BorderRadius.circular(9999),
+                //         minHeight: 16,
+                //       ),
+                //     ],
+                //   ),
+                // ),
+                // SizedBox(height: 24),
 
-                //intro
-                Card(
-                  margin: EdgeInsets.zero,
-                  elevation: 2,
-                  color: AppColors.primaryHoney,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(16),
-                    leading: Container(
-                      padding: EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(Icons.play_arrow),
-                    ),
-                    title: Text(
-                      "Intro",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (widget.mode == HomeMode.admin) ...[
-                          //tombol delete intro utk admin
-                          ActionCircleAdmin(
-                            icon: Icons.delete,
-                            color: AppColors.redComponent,
-                            onTap: () {},
-                          ),
-                          SizedBox(width: 8),
-                        ],
-                        Icon(Icons.chevron_right),
-                      ],
-                    ),
-                    onTap: () {
-                      if (widget.mode == HomeMode.admin) {
-                        //jika mode admin, ke halaman scene list
-                        //nanti hrs ngikutin nama intro
-                        context.push(SceneList(namaLevel: "Intro"));
-                      } else {
-                        //selain mode admin, ke halaman gameplay scene
-                      }
-                    },
-                  ),
-                ),
-                SizedBox(height: 24),
-
-                //tombol create intro utk admin
-                if (widget.mode == HomeMode.admin) ...[
-                  ButtonCreateAdmin(text: "Buat Intro Baru", onPressed: () {}),
-                  SizedBox(height: 24),
-                ],
-
-                //gridview level
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemCount: widget.mode == HomeMode.admin
-                      ? levelsLength + 1
-                      : levelsLength,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 0.7,
-                  ),
-                  itemBuilder: (context, index) {
-                    //button create level utk admin di slot terakhir
-                    if (widget.mode == HomeMode.admin &&
-                        index == levelsLength) {
-                      return CreateLevelCard();
+                //future builder utk intro dan grid level
+                FutureBuilder<List<LevelModel>>(
+                  future: _levelsFuture,
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    final levels = snapshot.data!;
+                    if (levels.isEmpty) {
+                      return const Center(child: Text("Belum ada chapter"));
                     }
 
-                    //card kotak level
-                    String isStatus = "i";
+                    final intro = levels.firstWhere(
+                      (e) => e.levelType == 'intro',
+                    );
+
+                    final gameplayLevels = levels
+                        .where((e) => e.levelType == 'gameplay')
+                        .toList();
+
                     return Column(
                       children: [
-                        Expanded(
-                          child:
-                              //stack utk icon edit delete admin
-                              Stack(
-                                clipBehavior: Clip.none,
-                                children: [
-                                  InkWell(
-                                    onTap: () {
-                                      if (widget.mode == HomeMode.admin) {
-                                        //jika mode admin, ke halaman scene list
-                                        context.push(
-                                          SceneList(
-                                            namaLevel: "Level ${index + 1}",
-                                          ),
-                                        );
-                                      } else {
-                                        //selain mode admin, ke halaman gameplay scene
-                                      }
-                                    },
-                                    child: Card(
-                                      margin: EdgeInsets.zero,
-                                      elevation: isStatus == "l" ? 0 : 2,
-                                      color: isStatus == "c"
-                                          ? AppColors.statusCompleted
-                                          : isStatus == "i"
-                                          ? AppColors.primaryHoney
-                                          : AppColors.statusLocked,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      child: SizedBox.expand(
-                                        // width: double.infinity,
-                                        // height: 80,
-                                        child: Icon(
-                                          isStatus == "c"
-                                              ? Icons.check_circle_outline
-                                              : isStatus == "i"
-                                              ? Icons.play_arrow
-                                              : Icons.lock_outline,
-                                          color: isStatus == "c"
-                                              ? AppColors.statusCompletedIcon
-                                              : Colors.black,
-                                          size: 32,
-                                        ),
-                                      ),
-                                    ),
+                        //intro
+                        Card(
+                          margin: EdgeInsets.zero,
+                          elevation: 2,
+                          color: AppColors.primaryHoney,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.all(16),
+                            leading: Container(
+                              padding: EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.3),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(Icons.play_arrow),
+                            ),
+                            title: Text(
+                              "Intro",
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // if (widget.mode == HomeMode.admin) ...[
+                                //   //tombol delete intro utk admin
+                                //   ActionCircleAdmin(
+                                //     icon: Icons.delete,
+                                //     color: AppColors.redComponent,
+                                //     onTap: () {},
+                                //   ),
+                                //   SizedBox(width: 8),
+                                // ],
+                                Icon(Icons.chevron_right),
+                              ],
+                            ),
+                            onTap: () {
+                              if (widget.mode == HomeMode.admin) {
+                                //jika mode admin, ke halaman scene list
+                                //nanti hrs ngikutin nama intro
+                                context.push(
+                                  SceneList(
+                                    namaLevel: "Intro",
+                                    levelId: intro.id!,
+                                    levelNote: intro.note,
                                   ),
+                                );
+                              } else {
+                                //selain mode admin, ke halaman gameplay scene
+                              }
+                            },
+                          ),
+                        ),
+                        SizedBox(height: 24),
 
-                                  //tombol delete utk admin
-                                  if (widget.mode == HomeMode.admin) ...[
-                                    Positioned(
-                                      top: 5,
-                                      right: 5,
-                                      child: Row(
+                        // //tombol create intro utk admin
+                        // if (widget.mode == HomeMode.admin) ...[
+                        //   ButtonCreateAdmin(text: "Buat Intro Baru", onPressed: () {}),
+                        //   SizedBox(height: 24),
+                        // ],
+
+                        //gridview level
+                        GridView.builder(
+                          shrinkWrap: true,
+                          physics: NeverScrollableScrollPhysics(),
+                          itemCount: widget.mode == HomeMode.admin
+                              ? gameplayLevels.length + 1
+                              : gameplayLevels.length,
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 3,
+                                crossAxisSpacing: 12,
+                                mainAxisSpacing: 12,
+                                childAspectRatio: 0.7,
+                              ),
+                          itemBuilder: (context, index) {
+                            //button create level utk admin di slot terakhir
+                            if (widget.mode == HomeMode.admin &&
+                                index == gameplayLevels.length) {
+                              return CreateLevelCard();
+                            }
+
+                            final level = gameplayLevels[index];
+
+                            //card kotak level
+                            final isStatus = currentRole == 'admin' ? 'i' : 'c';
+                            return Column(
+                              children: [
+                                Expanded(
+                                  child:
+                                      //stack utk icon edit delete admin
+                                      Stack(
+                                        clipBehavior: Clip.none,
                                         children: [
-                                          SizedBox(width: 4),
-                                          ActionCircleAdmin(
-                                            icon: Icons.delete,
-                                            color: AppColors.redComponent,
-                                            onTap: () {},
+                                          InkWell(
+                                            onTap: () {
+                                              if (widget.mode ==
+                                                  HomeMode.admin) {
+                                                //jika mode admin, ke halaman scene list
+                                                context.push(
+                                                  SceneList(
+                                                    namaLevel:
+                                                        "Level ${index + 1}",
+                                                    levelId: level.id!,
+                                                    levelNote: level.note,
+                                                  ),
+                                                );
+                                              } else {
+                                                //selain mode admin, ke halaman gameplay scene
+                                              }
+                                            },
+                                            child: Card(
+                                              margin: EdgeInsets.zero,
+                                              elevation: isStatus == "l"
+                                                  ? 0
+                                                  : 2,
+                                              color: isStatus == "c"
+                                                  ? AppColors.statusCompleted
+                                                  : isStatus == "i"
+                                                  ? AppColors.primaryHoney
+                                                  : AppColors.statusLocked,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(16),
+                                              ),
+                                              child: SizedBox.expand(
+                                                // width: double.infinity,
+                                                // height: 80,
+                                                child: Icon(
+                                                  isStatus == "c"
+                                                      ? Icons
+                                                            .check_circle_outline
+                                                      : isStatus == "i"
+                                                      ? Icons.play_arrow
+                                                      : Icons.lock_outline,
+                                                  color: isStatus == "c"
+                                                      ? AppColors
+                                                            .statusCompletedIcon
+                                                      : Colors.black,
+                                                  size: 32,
+                                                ),
+                                              ),
+                                            ),
                                           ),
-                                        ],
-                                      ),
-                                    ),
-                                  ], //if
-                                ], ////b
-                              ), /////b
-                        ),
-                        SizedBox(height: 10),
 
-                        //nomor level
-                        Text(
-                          "Level ${index + 1}",
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                                          //tombol delete utk admin
+                                          if (widget.mode ==
+                                              HomeMode.admin) ...[
+                                            Positioned(
+                                              top: 5,
+                                              right: 5,
+                                              child: Row(
+                                                children: [
+                                                  SizedBox(width: 4),
+                                                  ActionCircleAdmin(
+                                                    icon: Icons.delete,
+                                                    color:
+                                                        AppColors.redComponent,
+                                                    onTap: () {
+                                                      //blm tersedia
+                                                      ScaffoldMessenger.of(
+                                                        context,
+                                                      ).showSnackBar(
+                                                        const SnackBar(
+                                                          content: Text(
+                                                            "Fitur ini belum tersedia pada MVP",
+                                                          ),
+                                                        ),
+                                                      );
+                                                    },
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ], //if
+                                        ], ////b
+                                      ), /////b
+                                ),
+                                SizedBox(height: 10),
 
-                        //reward XP
-                        Text(
-                          "REWARD: 20 XP",
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
+                                //nomor level
+                                Text(
+                                  "Level ${index + 1}",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+
+                                //reward XP
+                                Text(
+                                  "Hadiah: 20 XP",
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       ],
                     );
@@ -303,7 +381,12 @@ class CreateLevelCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {},
+      onTap: () {
+        //blm tersedia
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Fitur ini belum tersedia pada MVP")),
+        );
+      },
       child: Column(
         children: [
           Expanded(

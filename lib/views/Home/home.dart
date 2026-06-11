@@ -6,6 +6,7 @@ import 'package:deebee_user/views/Admin/drawer_admin.dart';
 import 'package:deebee_user/views/Admin/user_management.dart';
 import 'package:deebee_user/views/Home/home_content.dart';
 import 'package:flutter/material.dart';
+import 'package:sqlite_viewer2/sqlite_viewer.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key, required this.mode});
@@ -24,7 +25,7 @@ class _HomeState extends State<Home> {
     const HomeContent(mode: HomeMode.admin),
     const AssetScene(),
     const UserManagement(),
-    Text("DB Structure Viewer pakai sqlite_viewer2"),
+    const DatabaseList(),
   ];
 
   @override
@@ -54,25 +55,4 @@ class _HomeState extends State<Home> {
           : const HomeContent(mode: HomeMode.user),
     );
   }
-}
-
-Widget banner({required Color color, required String text}) {
-  return Container(
-    margin: EdgeInsets.symmetric(horizontal: 5),
-    decoration: BoxDecoration(
-      color: color,
-      borderRadius: BorderRadius.circular(16),
-    ),
-
-    alignment: Alignment.center,
-
-    child: Text(
-      text,
-      style: TextStyle(
-        color: Colors.white,
-        fontSize: 24,
-        fontWeight: FontWeight.bold,
-      ),
-    ),
-  );
 }

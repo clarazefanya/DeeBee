@@ -1,7 +1,7 @@
 import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/database/preference_handler.dart';
-import 'package:deebee_user/database/user_repository.dart';
+import 'package:deebee_user/database/repository/user_repository.dart';
 import 'package:deebee_user/extension/navigator.dart';
 import 'package:deebee_user/models/user_model.dart';
 import 'package:deebee_user/views/Profile/about_us.dart';

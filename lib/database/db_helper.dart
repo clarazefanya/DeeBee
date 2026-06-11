@@ -29,9 +29,10 @@ class DBHelper {
         // 1. Eksekusi pembuatan tabel
         await db.execute(DBTables.createUsersTable);
         await db.execute(DBTables.createAssetSceneTable);
-
-        // Kalau nanti ada tabel baru, tinggal tambah di bawahnya:
-        // await db.execute(DBTables.createProgressTable);
+        await db.execute(DBTables.createModulesTable);
+        await db.execute(DBTables.createChaptersTable);
+        await db.execute(DBTables.createLevelsTable);
+        await db.execute(DBTables.createScenesTable);
 
         // 2. Eksekusi insert data demo/dummy
         for (String query in DBTables.dummyDataQueries) {

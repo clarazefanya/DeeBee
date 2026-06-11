@@ -1,6 +1,6 @@
 import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/constants/colors.dart';
-import 'package:deebee_user/database/asset_scene_repository.dart';
+import 'package:deebee_user/database/repository/asset_scene_repository.dart';
 import 'package:deebee_user/extension/navigator.dart';
 import 'package:deebee_user/models/asset_scene_model.dart';
 import 'package:flutter/material.dart';

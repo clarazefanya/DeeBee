@@ -1,7 +1,7 @@
 import 'package:deebee_user/database/preference_handler.dart';
 import 'package:deebee_user/models/user_model.dart';
 
-import 'db_helper.dart';
+import '../db_helper.dart';
 
 class UserRepository {
   // Panggil instance DBHelper
@@ -34,13 +34,8 @@ class UserRepository {
       whereArgs: [email, password],
     );
 
-    print('EMAIL INPUT: $email');
-    print('PASSWORD INPUT: $password');
-    print('HASIL QUERY: ${results.length}');
-
     if (results.isNotEmpty) {
       // Mengembalikan UserModel semua kolom
-      print(results.first);
       return UserModel.fromMap(results.first);
     }
     return null;
