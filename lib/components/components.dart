@@ -160,12 +160,14 @@ class ButtonComponent extends StatefulWidget {
   final String text;
   final Color bgcolor;
   final VoidCallback? onPressed;
+  final double? fontsize;
 
   const ButtonComponent({
     super.key,
     required this.text,
     required this.bgcolor,
     required this.onPressed,
+    this.fontsize,
   });
 
   @override
@@ -191,7 +193,7 @@ class _ButtonComponentState extends State<ButtonComponent> {
           style: TextStyle(
             color: AppColors.primaryBlack,
             fontWeight: FontWeight.bold,
-            fontSize: 20,
+            fontSize: widget.fontsize ?? 20,
           ),
         ),
       ),
