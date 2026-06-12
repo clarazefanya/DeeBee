@@ -162,10 +162,74 @@ class DBTables {
     VALUES (
       1,
       1,
+      3,
+      '???',
+      '.....',
+      'Dialog'
+    );
+    ''',
+
+    // Intro (Level ID = 2)
+    '''
+    INSERT INTO scenes (
+      level_id,
+      bg_image_id,
+      char_image_id,
+      char_name,
+      char_dialog,
+      scene_type,
+      optional_sentence
+    )
+    VALUES (
+      1,
+      1,
+      5,
+      'Adi',
+      'Halo, Aku Adi, salah satu pemilik toko ini. Selamat datang di DeeBee, karyawan baru.',
+      'Dialog',
+      '(Senyumnya maksa banget...)'
+    );
+    ''',
+
+    // Intro (Level ID = 3)
+    '''
+    INSERT INTO scenes (
+      level_id,
+      bg_image_id,
+      char_image_id,
+      char_name,
+      char_dialog,
+      scene_type
+    )
+    VALUES (
+      1,
+      1,
       4,
       'Adi',
-      'Halo! Aku Adi. Selamat datang di DeeBee. Aku akan menemanimu belajar SQL.',
+      'Hari ini kamu akan dibimbing sama pemilik toko ini yang satu lagi, Bian.',
       'Dialog'
+    );
+    ''',
+
+    // Intro (Level ID = 4)
+    '''
+    INSERT INTO scenes (
+      level_id,
+      bg_image_id,
+      char_image_id,
+      char_name,
+      char_dialog,
+      scene_type,
+      optional_sentence
+    )
+    VALUES (
+      1,
+      1,
+      7,
+      'Adi',
+      '....semoga kalian berdua cocok.',
+      'Dialog',
+      '.....'
     );
     ''',
 
@@ -177,15 +241,17 @@ class DBTables {
       char_image_id,
       char_name,
       char_dialog,
-      scene_type
+      scene_type,
+      optional_sentence
     )
     VALUES (
       2,
       2,
-      6,
+      10,
       'Bian',
-      'Hari ini kita akan belajar perintah SELECT untuk mengambil data dari tabel.',
-      'Dialog'
+      'Halo!!!!',
+      'Dialog',
+      '....hai?'
     );
     ''',
 
@@ -210,7 +276,7 @@ class DBTables {
       2,
       10,
       'Bian',
-      'Coba jawab pertanyaan berikut.',
+      'Pertama-tama, aku mau lihat kemampuanmu, mungkin dimulai dari lihat data produk dulu.',
       'Pilihan ganda',
       'Perintah SQL untuk menampilkan seluruh data dari tabel users adalah...',
       'SELECT * FROM users;',
@@ -221,7 +287,7 @@ class DBTables {
     );
     ''',
 
-    // Level 1 - Scene 3 (SQL Input)
+    // Level 1 - Scene 3 (Susun kata)
     '''
     INSERT INTO scenes (
       level_id,
@@ -237,12 +303,38 @@ class DBTables {
     VALUES (
       2,
       2,
-      6,
-      'Adi',
-      'Sekarang tuliskan query-nya sendiri.',
+      10,
+      'Bian',
+      'Bagaimana cara melihat semua data produk?',
+      'Susun kata',
+      'Susun kata di bawah ini menjadi query yang benar.',
+      'SELECT * FROM products',
+      10
+    );
+    ''',
+
+    // Level 1 - Scene 4 (SQL Input)
+    '''
+    INSERT INTO scenes (
+      level_id,
+      bg_image_id,
+      char_image_id,
+      char_name,
+      char_dialog,
+      scene_type,
+      question,
+      answer_key,
+      reward_xp
+    )
+    VALUES (
+      2,
+      2,
+      8,
+      'Bian',
+      'Sekarang tuliskan query untuk hanya melihat nama produknya saja.',
       'Tulis SQL',
-      'Tampilkan seluruh data dari tabel customers.',
-      'SELECT * FROM customers;',
+      'Tampilkan hanya data pada kolom "name" dari tabel products.',
+      'SELECT name FROM products',
       20
     );
     ''',
@@ -260,7 +352,7 @@ class DBTables {
     VALUES (
     3,
     1,
-    8,
+    9,
     'Bian',
     'Level ini digunakan untuk eksperimen create, edit, dan delete scene.',
     'Dialog'

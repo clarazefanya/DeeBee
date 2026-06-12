@@ -342,7 +342,20 @@ class _SceneCreateFormState extends State<SceneForm> {
                         ? 'Kunci Query SQL (HANYA BISA SELECT)'
                         : 'Kunci Susun Kata (HANYA BISA SELECT)',
                     textFieldCont: _jawabanTextCont,
-                    textFieldVal: (val) => val!.isEmpty ? 'Wajib diisi' : null,
+                    textFieldVal: (val) {
+                      if (val == null || val.trim().isEmpty) {
+                        return 'Wajib diisi';
+                      }
+
+                      //validasi cuman boleh query SELECT
+                      if (_selectedTipeScene == 'Tulis SQL') {
+                        final sql = val.trim().toUpperCase();
+                        if (!sql.startsWith('SELECT')) {
+                          return 'Untuk versi saat ini hanya query SELECT yang diperbolehkan';
+                        }
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 16),
                   //hadiah XP
@@ -439,6 +452,7 @@ class _SceneCreateFormState extends State<SceneForm> {
 
   Column _buildQuestion() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text("Pertanyaan", style: TextStyle(fontWeight: FontWeight.bold)),
         TextFieldComponent(

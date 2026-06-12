@@ -1,4 +1,3 @@
-import 'package:deebee_user/database/db_tables.dart';
 import 'package:deebee_user/database/exercise_db_tables.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -32,7 +31,7 @@ class ExerciseDbHelper {
         await db.execute(ExerciseDbTables.createTransactionsTable);
 
         // 2. Eksekusi insert data
-        for (String query in DBTables.dummyDataQueries) {
+        for (String query in ExerciseDbTables.dummyDataQueries) {
           await db.execute(query);
         }
       },

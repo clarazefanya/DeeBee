@@ -431,6 +431,14 @@ class _ProfileState extends State<Profile> {
                                   ),
                                   onTap: () {
                                     // Aksi saat ditekan
+                                    //blm tersedia
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          "Fitur ini belum tersedia pada MVP",
+                                        ),
+                                      ),
+                                    );
                                   },
                                 ),
 
@@ -552,7 +560,16 @@ class _ProfileState extends State<Profile> {
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
-                                  onTap: () {},
+                                  onTap: () {
+                                    //blm tersedia
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          "Fitur ini belum tersedia pada MVP",
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
 
                                 //garis pemisah

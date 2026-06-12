@@ -70,6 +70,7 @@ class _HomeContentState extends State<HomeContent> {
 
   @override
   Widget build(BuildContext context) {
+    final isStatus = currentRole == 'admin' ? 'i' : 'c';
     return ListView(
       children: [
         // CAROUSEL
@@ -146,9 +147,19 @@ class _HomeContentState extends State<HomeContent> {
                         ),
                         Spacer(),
                         Text(
-                          "32%",
+                          isStatus == "c"
+                              ? "100%"
+                              : isStatus == "i"
+                              ? "50%"
+                              : "0%",
                           style: TextStyle(
-                            color: AppColors.primaryHoney,
+                            color: isStatus == "c"
+                                ? AppColors.statusCompleted.withValues(
+                                    alpha: 0.5,
+                                  )
+                                : AppColors.statusInProgress.withValues(
+                                    alpha: 0.5,
+                                  ),
                             fontWeight: FontWeight.bold,
                             fontSize: 28,
                           ),
@@ -157,9 +168,15 @@ class _HomeContentState extends State<HomeContent> {
                     ),
                     SizedBox(height: 16),
                     LinearProgressIndicator(
-                      value: 0.32,
+                      value: isStatus == "c"
+                          ? 1.00
+                          : isStatus == "i"
+                          ? 0.50
+                          : 0.00,
                       backgroundColor: const Color(0xFFEBDFCE),
-                      color: AppColors.primaryHoney,
+                      color: isStatus == "c"
+                          ? AppColors.statusCompleted.withValues(alpha: 0.5)
+                          : AppColors.statusInProgress.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(9999),
                       minHeight: 16,
                     ),

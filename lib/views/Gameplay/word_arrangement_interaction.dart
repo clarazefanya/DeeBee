@@ -1,9 +1,17 @@
 import 'package:deebee_user/components/components.dart'; // Sesuaikan import kamu
 import 'package:deebee_user/constants/colors.dart';
+import 'package:deebee_user/models/scene_model.dart';
 import 'package:flutter/material.dart';
 
 class WordArrangementInteraction extends StatefulWidget {
-  const WordArrangementInteraction({super.key});
+  final SceneModel scene; // Terima data scene aktif
+  final VoidCallback onNext; // Terima fungsi trigger scene selanjutnya
+
+  const WordArrangementInteraction({
+    super.key,
+    required this.scene,
+    required this.onNext,
+  });
 
   @override
   State<WordArrangementInteraction> createState() =>
@@ -12,21 +20,35 @@ class WordArrangementInteraction extends StatefulWidget {
 
 class _WordArrangementInteractionState
     extends State<WordArrangementInteraction> {
-  final String _soal = "Tampilkan semua kolom dari tabel products!";
-  final String _kunciJawaban = "SELECT * FROM products";
-
   List<String> _randomizedWords = [];
-  // Kita menyimpan INDEX dari kata yang dipilih, bukan string-nya.
-  // Ini penting agar jika ada kata yang sama (misal ada dua kata "SELECT"), sistem tidak bingung.
   final List<int> _selectedIndexes = [];
 
   @override
   void initState() {
     super.initState();
-    // Pecah kalimat menjadi array kata-kata berdasarkan spasi
-    _randomizedWords = _kunciJawaban.split(' ');
-    // Acak urutan array nya
-    _randomizedWords.shuffle();
+    _initializeWords();
+  }
+
+  // Dipanggil otomatis oleh Flutter jika object widget.scene diganti dari parent (Gameplay)
+  @override
+  void didUpdateWidget(covariant WordArrangementInteraction oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.scene.id != widget.scene.id) {
+      _initializeWords();
+    }
+  }
+
+  // Fungsi memecah dan mengacak kata dari database
+  void _initializeWords() {
+    _selectedIndexes.clear(); // Bersihkan sisa jawaban scene sebelumnya
+    final String kunciJawaban = widget.scene.answerKey ?? '';
+
+    if (kunciJawaban.trim().isNotEmpty) {
+      _randomizedWords = kunciJawaban.split(' ');
+      _randomizedWords.shuffle(); // Acak urutan array
+    } else {
+      _randomizedWords = [];
+    }
   }
 
   // Fungsi untuk menggabungkan kata-kata yang dipilih menjadi satu kalimat utuh
@@ -34,16 +56,78 @@ class _WordArrangementInteractionState
     return _selectedIndexes.map((index) => _randomizedWords[index]).join(' ');
   }
 
+  // Fungsi memvalidasi jawaban susun kata
+  void _checkAnswer() {
+    final String jawabanUser = _currentAnswer.trim().toLowerCase();
+    final String jawabanBenar = (widget.scene.answerKey ?? '')
+        .trim()
+        .toLowerCase();
+
+    final bool isCorrect = jawabanUser == jawabanBenar;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                isCorrect ? Icons.check_circle : Icons.cancel,
+                color: isCorrect ? Colors.green : Colors.red,
+                size: 28,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                isCorrect ? 'Query Berhasil!' : 'Query Error / Salah',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: isCorrect ? Colors.green : Colors.red,
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            isCorrect
+                ? 'Kamu mendapatkan +${widget.scene.rewardXp} XP.'
+                : 'Susunan kueri SQL kamu tidak valid. Coba susun ulang!',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Tutup pop-up dialog
+                if (isCorrect) {
+                  widget
+                      .onNext(); // Hanya jika benar, lanjut ke scene berikutnya
+                }
+              },
+              child: Text(
+                isCorrect ? 'Lanjut' : 'Coba Lagi',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final String soalText =
+        widget.scene.question ?? 'Pertanyaan tidak tersedia';
+
     return SingleChildScrollView(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Soal
+          // Soal Asli DB
           Text(
-            _soal,
+            soalText,
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -52,14 +136,13 @@ class _WordArrangementInteractionState
           ),
           const SizedBox(height: 16),
 
-          // Label SQL Editor
           const Text(
             "SQL Editor",
             style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 4),
 
-          // Kotak Tampilan (Pengganti TextField Readonly)
+          // Kotak Tampilan Output
           Container(
             width: double.infinity,
             constraints: const BoxConstraints(minHeight: 120),
@@ -77,17 +160,16 @@ class _WordArrangementInteractionState
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
                 color: _currentAnswer.isEmpty ? Colors.grey : Colors.black,
-                fontFamily:
-                    'monospace', // Opsional: Biar fontnya kayak di code editor beneran
+                fontFamily: 'monospace',
               ),
             ),
           ),
           const SizedBox(height: 24),
 
-          // Area Kotak-kotak Kata (Menggunakan Wrap agar otomatis turun baris)
+          // Area Kotak-kotak Kata
           Wrap(
-            spacing: 10, // Jarak horizontal antar kotak
-            runSpacing: 12, // Jarak vertikal antar kotak
+            spacing: 10,
+            runSpacing: 12,
             children: List.generate(_randomizedWords.length, (index) {
               bool isSelected = _selectedIndexes.contains(index);
 
@@ -95,33 +177,16 @@ class _WordArrangementInteractionState
                 onTap: () {
                   setState(() {
                     if (isSelected) {
-                      // LOGIC UNSELECT: Hanya bisa unselect jika ini adalah kata terakhir yang dimasukkan
-                      // if (_selectedIndexes.last == index) {
-                      //   _selectedIndexes.removeLast();
-                      // } else {
-                      //   // Opsional: Tampilkan snackbar peringatan kalau user ngeyel pencet kata di tengah
-                      //   ScaffoldMessenger.of(context).showSnackBar(
-                      //     const SnackBar(
-                      //       content: Text(
-                      //         "Hapus dari kata yang paling terakhir dulu!",
-                      //       ),
-                      //       duration: Duration(seconds: 1),
-                      //     ),
-                      //   );
-                      // }
-
-                      // LOGIC UNSELECT: Bebas hapus darimana saja
-                      _selectedIndexes.remove(index);
+                      _selectedIndexes.remove(
+                        index,
+                      ); // Bebas hapus darimana saja
                     } else {
-                      // LOGIC SELECT: Tambahkan ke array jawaban
-                      _selectedIndexes.add(index);
+                      _selectedIndexes.add(index); // Tambahkan ke array jawaban
                     }
                   });
                 },
                 child: Card(
-                  elevation: isSelected
-                      ? 0
-                      : 3, // Kalau dipencet, bayangan hilang
+                  elevation: isSelected ? 0 : 3,
                   color: isSelected ? Colors.grey[300] : Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -155,28 +220,25 @@ class _WordArrangementInteractionState
           // Row Buttons
           Row(
             children: [
-              // Button Hapus Jawaban
               Expanded(
                 child: ButtonComponent(
                   text: "Hapus Jawaban",
                   bgcolor: AppColors.redComponent,
-                  onPressed: () {
-                    setState(() {
-                      // Ngosongin semua jawaban & unselect semua kotak
-                      _selectedIndexes.clear();
-                    });
-                  },
+                  onPressed: _selectedIndexes.isEmpty
+                      ? null // Matikan tombol jika belum nulis apa-apa
+                      : () {
+                          setState(() {
+                            _selectedIndexes.clear();
+                          });
+                        },
                 ),
               ),
               const SizedBox(width: 12),
-              // Button Jawab
               Expanded(
                 child: ButtonComponent(
                   text: "Jawab",
                   bgcolor: AppColors.primaryHoney,
-                  onPressed: () {
-                    // Logic cek jawaban nanti di sini
-                  },
+                  onPressed: _selectedIndexes.isEmpty ? null : _checkAnswer,
                 ),
               ),
             ],

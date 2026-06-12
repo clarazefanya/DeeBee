@@ -2,10 +2,12 @@ import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/database/preference_handler.dart';
 import 'package:deebee_user/database/repository/level_repository.dart';
+import 'package:deebee_user/database/repository/scene_repository.dart';
 import 'package:deebee_user/extension/navigator.dart';
 import 'package:deebee_user/models/home_mode_model.dart';
 import 'package:deebee_user/models/level_model.dart';
 import 'package:deebee_user/views/Admin/scene_list.dart';
+import 'package:deebee_user/views/Gameplay/gameplay_scene.dart';
 import 'package:flutter/material.dart';
 
 class LevelSelect extends StatefulWidget {
@@ -196,10 +198,9 @@ class _LevelSelectState extends State<LevelSelect> {
                                 Icon(Icons.chevron_right),
                               ],
                             ),
-                            onTap: () {
+                            onTap: () async {
                               if (widget.mode == HomeMode.admin) {
                                 //jika mode admin, ke halaman scene list
-                                //nanti hrs ngikutin nama intro
                                 context.push(
                                   SceneList(
                                     namaLevel: "Intro",
@@ -208,7 +209,31 @@ class _LevelSelectState extends State<LevelSelect> {
                                   ),
                                 );
                               } else {
-                                //selain mode admin, ke halaman gameplay scene
+                                //selain mode admin, ke halaman gameplay
+                                //Ambil data scene untuk level intro dari database
+                                final scenes = await SceneRepository()
+                                    .getScenesByLevel(intro.id!);
+
+                                if (scenes.isEmpty) {
+                                  // Antisipasi jika admin belum membuat scene sama sekali di level ini
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Konten level belum tersedia',
+                                      ),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                // Arahkan ke halaman Gameplay dengan membawa list scenes
+                                context.push(
+                                  Gameplay(
+                                    namaLevel: "Intro",
+                                    levelId: intro.id!,
+                                    scenes: scenes,
+                                    // Kirim list scenes yang didapat dari DB
+                                  ),
+                                );
                               }
                             },
                           ),
@@ -255,7 +280,7 @@ class _LevelSelectState extends State<LevelSelect> {
                                         clipBehavior: Clip.none,
                                         children: [
                                           InkWell(
-                                            onTap: () {
+                                            onTap: () async {
                                               if (widget.mode ==
                                                   HomeMode.admin) {
                                                 //jika mode admin, ke halaman scene list
@@ -269,6 +294,34 @@ class _LevelSelectState extends State<LevelSelect> {
                                                 );
                                               } else {
                                                 //selain mode admin, ke halaman gameplay scene
+                                                //Ambil data scene untuk level gameplay ini
+                                                final scenes =
+                                                    await SceneRepository()
+                                                        .getScenesByLevel(
+                                                          level.id!,
+                                                        );
+
+                                                if (scenes.isEmpty) {
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    const SnackBar(
+                                                      content: Text(
+                                                        'Konten level belum tersedia',
+                                                      ),
+                                                    ),
+                                                  );
+                                                  return;
+                                                }
+                                                // Arahkan ke halaman Gameplay
+                                                context.push(
+                                                  Gameplay(
+                                                    namaLevel:
+                                                        "Level ${index + 1}",
+                                                    levelId: level.id!,
+                                                    scenes: scenes,
+                                                  ),
+                                                );
                                               }
                                             },
                                             child: Card(

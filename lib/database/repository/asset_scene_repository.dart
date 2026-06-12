@@ -37,4 +37,17 @@ class AssetSceneRepository {
 
     return await db.delete('asset_scene', where: 'id = ?', whereArgs: [id]);
   }
+
+  // Read image berdasarkan id (READ)
+  Future<AssetSceneModel> getAssetAssetById(int id) async {
+    final db = await _dbHelper.database;
+
+    final result = await db.query(
+      'asset_scene',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    return AssetSceneModel.fromMap(result.first);
+  }
 }

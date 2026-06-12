@@ -1,24 +1,227 @@
+import 'package:collection/collection.dart';
 import 'package:deebee_user/components/components.dart'; // Sesuaikan import kamu
 import 'package:deebee_user/constants/colors.dart';
-import 'package:deebee_user/extension/navigator.dart';
+import 'package:deebee_user/database/repository/exercise_db_repository.dart';
+import 'package:deebee_user/models/scene_model.dart';
 import 'package:flutter/material.dart';
 
 class SqlInputInteraction extends StatefulWidget {
-  const SqlInputInteraction({super.key});
+  final SceneModel scene; // Terima data scene aktif
+  final VoidCallback onNext; // Terima fungsi trigger scene selanjutnya
+
+  const SqlInputInteraction({
+    super.key,
+    required this.scene,
+    required this.onNext,
+  });
 
   @override
   State<SqlInputInteraction> createState() => _SqlInputInteractionState();
 }
 
 class _SqlInputInteractionState extends State<SqlInputInteraction> {
-  // Controller
   final TextEditingController _sqlController = TextEditingController();
+  final _exerciseDb = ExerciseDbRepository();
 
-  // State untuk melacak apakah tombol "Cek Hasil" sudah dipencet
   bool _isResultChecked = false;
 
-  final String _soal =
-      "Tampilkan semua data dari tabel products yang memiliki harga di atas 5000!";
+  // State untuk menampung data riil hasil kueri
+  List<Map<String, dynamic>> _targetResult = [];
+  List<Map<String, dynamic>> _userResult = [];
+  String?
+  _errorMessage; // Menyimpan log error SQLite jika query user typo/salah syntax
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTargetResult();
+  }
+
+  @override
+  void didUpdateWidget(covariant SqlInputInteraction oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Reset state jika index scene berpindah dari halaman utama Gameplay
+    if (oldWidget.scene.id != widget.scene.id) {
+      _sqlController.clear();
+      _isResultChecked = false;
+      _userResult.clear();
+      _errorMessage = null;
+      _loadTargetResult();
+    }
+  }
+
+  // Mengambil output dari kunci jawaban database secara dinamis
+  void _loadTargetResult() async {
+    final correctQuery = widget.scene.answerKey ?? '';
+    if (correctQuery.isNotEmpty) {
+      try {
+        final res = await _exerciseDb.executeUserQuery(correctQuery);
+        setState(() {
+          _targetResult = res;
+        });
+      } catch (e) {
+        print("Error loading target result: $e");
+      }
+    }
+  }
+
+  // Fungsi untuk menguji query buatan user tanpa mencocokkan jawaban dulu
+  void _runUserQuery() async {
+    final inputSql = _sqlController.text.trim();
+
+    if (inputSql.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Query tidak boleh kosong!")),
+      );
+      return;
+    }
+
+    // Proteksi: Hanya menerima kueri bertipe SELECT
+    if (!inputSql.toUpperCase().startsWith('SELECT')) {
+      setState(() {
+        _isResultChecked = true;
+        _userResult.clear();
+        _errorMessage =
+            'Untuk versi saat ini hanya kueri SELECT yang diperbolehkan.';
+      });
+      return;
+    }
+
+    try {
+      final res = await _exerciseDb.executeUserQuery(inputSql);
+      setState(() {
+        _userResult = res;
+        _errorMessage = null; // Bersihkan error jika kueri sukses eksekusi
+        _isResultChecked = true;
+      });
+    } catch (e) {
+      setState(() {
+        _userResult.clear();
+        _errorMessage = e.toString().replaceAll(
+          'Exception: ',
+          '',
+        ); // Rapikan string error
+        _isResultChecked = true;
+      });
+    }
+  }
+
+  // Logika memvalidasi kesamaan output tabel user vs target kunci jawaban
+  void _submitAnswer() {
+    final inputSql = _sqlController.text.trim();
+
+    if (!_isResultChecked) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Klik 'Cek Hasil' terlebih dahulu untuk menguji kueri kamu.",
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (_errorMessage != null || inputSql.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Kueri kamu masih error atau tidak valid!"),
+        ),
+      );
+      return;
+    }
+
+    // Metode Deep Comparison mengecek apakah baris, kolom, dan urutan data bernilai sama persis
+    final bool isCorrect = const DeepCollectionEquality().equals(
+      _userResult,
+      _targetResult,
+    );
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                isCorrect ? Icons.check_circle : Icons.cancel,
+                color: isCorrect ? Colors.green : Colors.red,
+                size: 28,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                isCorrect ? 'Query Sukses!' : 'Query Tidak Sesuai',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: isCorrect ? Colors.green : Colors.red,
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            isCorrect
+                ? 'kamu mendapatkan +${widget.scene.rewardXp} XP.'
+                : 'Meskipun kueri sukses dieksekusi, output data yang dihasilkan tidak sesuai dengan Target Hasil yang diminta. Silakan periksa kembali filter atau kolom kamu!',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                if (isCorrect) {
+                  widget.onNext(); // Jika benar, panggil trigger lanjut scene
+                }
+              },
+              child: Text(
+                isCorrect ? 'Lanjut' : 'Perbaiki',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Fungsi helper dinamis untuk membangun tabel data dari list hasil kueri SQLite
+  Widget _buildDataTable(List<Map<String, dynamic>> data) {
+    if (data.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Text(
+          "Tabel kosong (0 baris ditemukan)",
+          style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
+        ),
+      );
+    }
+
+    // Ambil string keys dari Map sebagai nama header kolom secara dinamis
+    final columns = data.first.keys.toList();
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: DataTable(
+        headingRowColor: WidgetStateProperty.all(AppColors.primaryCream),
+        columns: columns.map((colName) {
+          return DataColumn(
+            label: Text(
+              colName,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          );
+        }).toList(),
+        rows: data.map((rowMap) {
+          return DataRow(
+            cells: columns.map((colName) {
+              return DataCell(Text(rowMap[colName]?.toString() ?? 'NULL'));
+            }).toList(),
+          );
+        }).toList(),
+      ),
+    );
+  }
 
   @override
   void dispose() {
@@ -28,12 +231,15 @@ class _SqlInputInteractionState extends State<SqlInputInteraction> {
 
   @override
   Widget build(BuildContext context) {
+    final String soalText =
+        widget.scene.question ?? 'Pertanyaan tidak tersedia';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Soal
         Text(
-          _soal,
+          soalText,
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -42,7 +248,7 @@ class _SqlInputInteractionState extends State<SqlInputInteraction> {
         ),
         const SizedBox(height: 16),
 
-        // Accordion Target Hasil
+        // Accordion Target Hasil (Dinamis dari database kunci jawaban)
         ExpansionTile(
           title: const Text(
             "Target Hasil",
@@ -51,64 +257,18 @@ class _SqlInputInteractionState extends State<SqlInputInteraction> {
           iconColor: AppColors.primaryHoney,
           collapsedIconColor: AppColors.primaryBlack,
           tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-          // border saat tertutup
           collapsedShape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: const BorderSide(color: AppColors.borderBrown, width: 1),
           ),
-          // border saat terbuka
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: const BorderSide(color: AppColors.primaryHoney, width: 2),
           ),
           children: [
-            // Dummy Tabel Hasil yang Diharapkan
             Align(
               alignment: Alignment.centerLeft,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: DataTable(
-                  headingRowColor: WidgetStateProperty.all(
-                    AppColors.primaryCream,
-                  ),
-                  columns: const [
-                    DataColumn(
-                      label: Text(
-                        'id',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    DataColumn(
-                      label: Text(
-                        'nama_produk',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    DataColumn(
-                      label: Text(
-                        'harga',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                  rows: const [
-                    DataRow(
-                      cells: [
-                        DataCell(Text('1')),
-                        DataCell(Text('Kopi Arabica')),
-                        DataCell(Text('15000')),
-                      ],
-                    ),
-                    DataRow(
-                      cells: [
-                        DataCell(Text('3')),
-                        DataCell(Text('Teh Manis')),
-                        DataCell(Text('8000')),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+              child: _buildDataTable(_targetResult),
             ),
           ],
         ),
@@ -123,27 +283,26 @@ class _SqlInputInteractionState extends State<SqlInputInteraction> {
           iconColor: AppColors.primaryHoney,
           collapsedIconColor: AppColors.primaryBlack,
           tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-          // border saat tertutup
           collapsedShape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: const BorderSide(color: AppColors.borderBrown, width: 1),
           ),
-          // border saat terbuka
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: const BorderSide(color: AppColors.primaryHoney, width: 2),
           ),
           children: [
-            // Gambar (sementara pakai foto yang sudah ada)
             GestureDetector(
               onTap: () {
-                // buka gambar, bisa dizoom
-                context.push(OpenImage());
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const OpenImage()),
+                );
               },
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: Image.asset(
-                  'assets/images/toko-deebee.jpg',
+                  'assets/images/erd.png',
                   fit: BoxFit.cover,
                   width: double.infinity,
                 ),
@@ -153,7 +312,6 @@ class _SqlInputInteractionState extends State<SqlInputInteraction> {
         ),
         const SizedBox(height: 16),
 
-        // Label SQL Editor
         const Text(
           "SQL Editor",
           style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
@@ -163,10 +321,10 @@ class _SqlInputInteractionState extends State<SqlInputInteraction> {
         // TextField SQL Editor Editable
         TextFormField(
           controller: _sqlController,
-          maxLines: 5,
+          maxLines: 4,
           style: const TextStyle(fontFamily: 'monospace', fontSize: 14),
           decoration: InputDecoration(
-            hintText: "Ketik query SQL di sini...",
+            hintText: "SELECT * FROM ...",
             hintStyle: const TextStyle(color: Color(0xFF626566), fontSize: 14),
             filled: true,
             fillColor: Colors.white,
@@ -196,48 +354,55 @@ class _SqlInputInteractionState extends State<SqlInputInteraction> {
         ),
         const SizedBox(height: 16),
 
-        // Label Hasil Query
         const Text(
           "Hasil Query",
           style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
 
-        // Area Tabel Hasil Query (muncul jika udh pernah klik cek hasil)
-        !_isResultChecked
-            ? const Text(
-                "Klik 'Cek Hasil' untuk melihat output dari query kamu.",
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 13,
-                  fontStyle: FontStyle.italic,
-                ),
-              )
-            : SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                // Dummy hasil render dari input user
-                child: DataTable(
-                  headingRowColor: WidgetStateProperty.all(
-                    AppColors.primaryCream,
-                  ),
-                  columns: const [
-                    DataColumn(label: Text('id')),
-                    DataColumn(label: Text('nama_produk')),
-                    DataColumn(label: Text('harga')),
-                  ],
-                  rows: const [
-                    DataRow(
-                      cells: [
-                        DataCell(Text('1')),
-                        DataCell(Text('Kopi Arabica')),
-                        DataCell(Text('15000')),
-                      ],
-                    ),
-                    // Nanti ini diisi berdasarkan response pengecekan DB
-                  ],
-                ),
-              ),
-        const SizedBox(height: 32),
+        // Area Output dinamis
+        Container(
+          width: double.infinity,
+          constraints: const BoxConstraints(minHeight: 150, maxHeight: 250),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.borderBrown, width: 1),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: SingleChildScrollView(
+              child: !_isResultChecked
+                  ? const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text(
+                        "Klik 'Cek Hasil' untuk melihat output dari kueri kamu.",
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 13,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    )
+                  : _errorMessage != null
+                  ? Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        _errorMessage!,
+                        style: const TextStyle(
+                          color: Colors.red,
+                          fontFamily: 'monospace',
+                          fontSize: 13,
+                        ),
+                      ),
+                    )
+                  : _buildDataTable(
+                      _userResult,
+                    ), // Render data dari kueri kustom user asli
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
 
         // Row Buttons Cek Hasil & Jawab
         Row(
@@ -246,23 +411,15 @@ class _SqlInputInteractionState extends State<SqlInputInteraction> {
               child: ButtonComponent(
                 text: "Cek Hasil",
                 bgcolor: AppColors.primaryCream,
-                onPressed: () {
-                  setState(() {
-                    // Munculkan tabel hasil query
-                    _isResultChecked = true;
-                  });
-                },
+                onPressed: _runUserQuery,
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              flex: 1,
               child: ButtonComponent(
                 text: "Jawab",
                 bgcolor: AppColors.primaryHoney,
-                onPressed: () {
-                  // Logic submit jawaban
-                },
+                onPressed: _submitAnswer,
               ),
             ),
           ],
@@ -273,7 +430,7 @@ class _SqlInputInteractionState extends State<SqlInputInteraction> {
   }
 }
 
-///halaman open image struktur query
+/// Halaman open image struktur query
 class OpenImage extends StatelessWidget {
   const OpenImage({super.key});
 
@@ -289,12 +446,9 @@ class OpenImage extends StatelessWidget {
       body: Center(
         child: InteractiveViewer(
           panEnabled: true,
-          minScale: 1.0, // Ukuran asli
-          maxScale: 5.0, // Maksimal zoom sampai 5x lipat
-          child: Image.asset(
-            'assets/images/toko-deebee.jpg',
-            fit: BoxFit.contain,
-          ),
+          minScale: 1.0,
+          maxScale: 5.0,
+          child: Image.asset('assets/images/erd.png', fit: BoxFit.contain),
         ),
       ),
     );

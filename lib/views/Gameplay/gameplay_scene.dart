@@ -1,6 +1,10 @@
 import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/constants/colors.dart';
-import 'package:deebee_user/models/dummy_models.dart';
+import 'package:deebee_user/database/repository/asset_scene_repository.dart';
+import 'package:deebee_user/extension/navigator.dart';
+import 'package:deebee_user/models/asset_scene_model.dart';
+import 'package:deebee_user/models/gameplay_enum_model.dart';
+import 'package:deebee_user/models/scene_model.dart';
 import 'package:deebee_user/views/Gameplay/dialog_interaction.dart';
 import 'package:deebee_user/views/Gameplay/multiple_choice_interaction.dart';
 import 'package:deebee_user/views/Gameplay/sql_input_interaction.dart';
@@ -8,22 +12,74 @@ import 'package:deebee_user/views/Gameplay/word_arrangement_interaction.dart';
 import 'package:flutter/material.dart';
 
 class Gameplay extends StatefulWidget {
-  const Gameplay({super.key, required this.gameplayType});
+  const Gameplay({
+    super.key,
+    required this.namaLevel,
+    required this.levelId,
+    required this.scenes,
+  });
 
-  final GameplayType gameplayType;
+  // final GameplayType gameplayType;
+  final String namaLevel;
+  final int levelId;
+  final List<SceneModel> scenes;
 
   @override
   State<Gameplay> createState() => _GameplayState();
 }
 
 class _GameplayState extends State<Gameplay> {
-  //test var gameplaytype
-  GameplayType? gameplayType;
+  // //test var gameplaytype
+  // GameplayType? gameplayType;
 
-  @override
-  void initState() {
-    super.initState();
-    gameplayType = widget.gameplayType;
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   gameplayType = widget.gameplayType;
+  // }
+
+  // Melacak scene keberapa yang sedang aktif
+  int _currentIndex = 0;
+
+  // Mengambil data scene aktif saat ini
+  SceneModel get _currentScene => widget.scenes[_currentIndex];
+
+  // Mendapatkan tipe gameplay berdasarkan data di database
+  GameplayType get _currentGameplayType =>
+      GameplayType.fromString(_currentScene.sceneType);
+
+  // Fungsi untuk berpindah ke scene berikutnya (dipanggil dari widget interaksi nanti)
+  void nextScene() {
+    if (_currentIndex < widget.scenes.length - 1) {
+      setState(() {
+        _currentIndex++;
+      });
+    } else {
+      // Jika scene sudah habis, level selesai!
+      _showLevelCompletedDialog();
+    }
+  }
+
+  void _showLevelCompletedDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Halaman Selesai!'),
+        content: const Text(
+          'Selamat! Kamu telah menyelesaikan seluruh scene di level ini.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              context.pop(); // Keluar dialog
+              context.pop(); // Kembali ke LevelSelect
+            },
+            child: const Text('Selesai'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -31,7 +87,7 @@ class _GameplayState extends State<Gameplay> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: DeebeeAppbar(leading: IconAppbarGameplay()),
-      body: gameplayType == GameplayType.sqlInput
+      body: _currentGameplayType == GameplayType.sqlInput
           ? _buildSqlLayout()
           : _buildNormalLayout(),
     );
@@ -44,15 +100,26 @@ class _GameplayState extends State<Gameplay> {
       child: Column(
         children: [
           //row level, current scene, reward XP
-          RowLevel(),
+          RowLevel(
+            namaLevel: widget.namaLevel,
+            currentScene: _currentIndex + 1,
+            totalScenes: widget.scenes.length,
+            rewardXp: _currentScene.rewardXp,
+          ),
           SizedBox(height: 16),
 
           //area ilustrasi (stack background dan char)
-          IllustrationSection(),
+          IllustrationSection(
+            bgImageId: _currentScene.bgImageId,
+            charImageId: _currentScene.charImageId,
+          ),
           SizedBox(height: 10),
 
           //area dialog
-          DialogSection(),
+          DialogSection(
+            charName: _currentScene.charName ?? '-',
+            charDialog: _currentScene.charDialog ?? '',
+          ),
           SizedBox(height: 10),
 
           //area soal/interaction conditional
@@ -64,28 +131,37 @@ class _GameplayState extends State<Gameplay> {
 
   ///build SQL layout
   Widget _buildSqlLayout() {
-    return Expanded(
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              //row level, current scene, reward XP
-              RowLevel(),
-              SizedBox(height: 16),
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            //row level, current scene, reward XP
+            RowLevel(
+              namaLevel: widget.namaLevel,
+              currentScene: _currentIndex + 1,
+              totalScenes: widget.scenes.length,
+              rewardXp: _currentScene.rewardXp,
+            ),
+            SizedBox(height: 16),
 
-              //area ilustrasi (stack background dan char)
-              IllustrationSection(),
-              SizedBox(height: 10),
+            //area ilustrasi (stack background dan char)
+            IllustrationSection(
+              bgImageId: _currentScene.bgImageId,
+              charImageId: _currentScene.charImageId,
+            ),
+            SizedBox(height: 10),
 
-              //area dialog
-              DialogSection(),
-              SizedBox(height: 10),
+            //area dialog
+            DialogSection(
+              charName: _currentScene.charName ?? '-',
+              charDialog: _currentScene.charDialog ?? '',
+            ),
+            SizedBox(height: 10),
 
-              //area soal/interaction input SQL
-              _interactionArea(),
-            ],
-          ),
+            //area soal/interaction input SQL
+            _interactionArea(),
+          ],
         ),
       ),
     );
@@ -93,15 +169,26 @@ class _GameplayState extends State<Gameplay> {
 
   ///Area interaksi
   Widget _interactionArea() {
-    switch (gameplayType) {
+    switch (_currentGameplayType) {
       case GameplayType.dialog:
-        return const DialogInteraction();
+        return DialogInteraction(
+          // Melempar data scene yang sedang aktif dari DB
+          scene: _currentScene,
+          // Melempar fungsi untuk memicu scene berikutnya
+          onNext: nextScene,
+        );
       case GameplayType.multipleChoice:
-        return const MultipleChoiceInteraction();
+        return MultipleChoiceInteraction(
+          scene: _currentScene,
+          onNext: nextScene,
+        );
       case GameplayType.wordArrangement:
-        return const WordArrangementInteraction();
+        return WordArrangementInteraction(
+          scene: _currentScene,
+          onNext: nextScene,
+        );
       case GameplayType.sqlInput:
-        return const SqlInputInteraction();
+        return SqlInputInteraction(scene: _currentScene, onNext: nextScene);
       default:
         return const SizedBox.shrink();
     }
@@ -111,7 +198,18 @@ class _GameplayState extends State<Gameplay> {
 
 /// row level, current scene, reward XP
 class RowLevel extends StatelessWidget {
-  const RowLevel({super.key});
+  final String namaLevel;
+  final int currentScene;
+  final int totalScenes;
+  final int rewardXp;
+
+  const RowLevel({
+    super.key,
+    required this.namaLevel,
+    required this.currentScene,
+    required this.totalScenes,
+    required this.rewardXp,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -119,7 +217,7 @@ class RowLevel extends StatelessWidget {
       children: [
         //text level
         Text(
-          "Level 1",
+          namaLevel,
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
@@ -130,7 +228,7 @@ class RowLevel extends StatelessWidget {
 
         //[current scene]/[jumlah scene]
         Text(
-          "1/5",
+          "$currentScene/$totalScenes",
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
@@ -148,7 +246,7 @@ class RowLevel extends StatelessWidget {
             border: Border.all(color: AppColors.borderLightBrown),
           ),
           child: Text(
-            "Hadiah: 20 XP",
+            "Hadiah: $rewardXp XP",
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
           ),
         ),
@@ -159,7 +257,14 @@ class RowLevel extends StatelessWidget {
 
 /// area dialog
 class DialogSection extends StatelessWidget {
-  const DialogSection({super.key});
+  final String charName;
+  final String charDialog;
+
+  const DialogSection({
+    super.key,
+    required this.charName,
+    required this.charDialog,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -176,7 +281,7 @@ class DialogSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Adi",
+            charName,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -187,7 +292,7 @@ class DialogSection extends StatelessWidget {
           Expanded(
             child: SingleChildScrollView(
               child: Text(
-                "Biasanya orang-orang yang ingin bisa menguasai database mencari pekerjaan yang berkelas di kantoran seperti data analyst, tidak ada yang mau mendaftar ke pekerjaan rendahan seperti pegawai toko ini.",
+                charDialog,
                 style: TextStyle(fontSize: 13, color: AppColors.primaryBlack),
               ),
             ),
@@ -200,10 +305,14 @@ class DialogSection extends StatelessWidget {
 
 /// area ilustrasi (stack background dan char)
 class IllustrationSection extends StatelessWidget {
-  const IllustrationSection({super.key});
+  final int? bgImageId;
+  final int? charImageId;
+
+  const IllustrationSection({super.key, this.bgImageId, this.charImageId});
 
   @override
   Widget build(BuildContext context) {
+    final assetRepo = AssetSceneRepository();
     return ConstrainedBox(
       //Membatasi lebar maksimal container
       constraints: const BoxConstraints(maxWidth: 480),
@@ -222,24 +331,45 @@ class IllustrationSection extends StatelessWidget {
             child: ClipRRect(
               //cliprrect agar semua komponen di dalamnya terpotong sesuai radius
               borderRadius: BorderRadius.circular(16),
-              child: Image.asset(
-                'assets/images/toko-deebee.jpg',
-                fit: BoxFit.cover, //gambar menutupi seluruh container
-                alignment: Alignment.center,
-              ),
+              child: bgImageId == null
+                  ? const SizedBox.shrink()
+                  : FutureBuilder<AssetSceneModel?>(
+                      // Pastikan Anda punya fungsi ambil asset tunggal berdasarkan id di repo asset Anda
+                      future: assetRepo.getAssetAssetById(bgImageId!),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData && snapshot.data?.image != null) {
+                          return Image.memory(
+                            snapshot.data!.image,
+                            fit: BoxFit.cover,
+                            alignment: Alignment.center,
+                          );
+                        }
+                        return const Center(child: CircularProgressIndicator());
+                      },
+                    ),
             ),
           ),
 
           //char png
-          Positioned(
-            bottom: 2,
-            child: Image.asset(
-              'assets/images/avatars/user-avatars-1.jpg',
-              width: 320,
-              height: 170,
-              fit: BoxFit.contain,
+          //ender Character PNG dari DB BLOB
+          if (charImageId != null)
+            Positioned(
+              bottom: 2,
+              child: FutureBuilder<AssetSceneModel?>(
+                future: assetRepo.getAssetAssetById(charImageId!),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData && snapshot.data?.image != null) {
+                    return Image.memory(
+                      snapshot.data!.image,
+                      width: 320,
+                      height: 170,
+                      fit: BoxFit.contain,
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
             ),
-          ),
         ],
       ),
     );

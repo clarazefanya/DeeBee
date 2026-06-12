@@ -1,9 +1,17 @@
 import 'package:deebee_user/components/components.dart'; // Sesuaikan import kamu
 import 'package:deebee_user/constants/colors.dart';
+import 'package:deebee_user/models/scene_model.dart';
 import 'package:flutter/material.dart';
 
 class MultipleChoiceInteraction extends StatefulWidget {
-  const MultipleChoiceInteraction({super.key});
+  final SceneModel scene; // Terima data scene aktif
+  final VoidCallback onNext; // Terima fungsi trigger scene selanjutnya
+
+  const MultipleChoiceInteraction({
+    super.key,
+    required this.scene,
+    required this.onNext,
+  });
 
   @override
   State<MultipleChoiceInteraction> createState() =>
@@ -14,17 +22,80 @@ class _MultipleChoiceInteractionState extends State<MultipleChoiceInteraction> {
   // Simpan status opsi yang dipilih (null berarti belum ada yang dipilih)
   String? _selectedOption;
 
-  // Dummy data soal dan opsi, nanti ini dapet dari database
-  final String _soal =
-      "Perintah apa yang digunakan untuk mengambil kolom tertentu dari sebuah tabel?";
-  final Map<String, String> _options = {
-    'A': 'SELECT nama_kolom FROM nama_tabel;',
-    'B': 'GET nama_kolom FROM nama_tabel;',
-    'C': 'EXTRACT nama_kolom FROM nama_tabel;',
-  };
+  // Fungsi untuk memvalidasi jawaban saat tombol di-klik
+  void _checkAnswer() {
+    if (_selectedOption == null) return;
+
+    // Ambil kunci jawaban asli dari database (A, B, atau C)
+    final String correctKey = widget.scene.answerKeyMultipleChoice ?? '';
+    final bool isCorrect = _selectedOption == correctKey;
+
+    // Tampilkan feedback pop-up berdasarkan kebenaran jawaban
+    showDialog(
+      context: context,
+      barrierDismissible: false, // User wajib menekan tombol di dalam dialog
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                isCorrect ? Icons.check_circle : Icons.cancel,
+                color: isCorrect ? Colors.green : Colors.red,
+                size: 28,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                isCorrect ? 'Jawaban Benar!' : 'Jawaban Salah',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: isCorrect ? Colors.green : Colors.red,
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            isCorrect
+                ? 'Kamu mendapatkan +${widget.scene.rewardXp} XP.'
+                : 'Yah, jawabanmu kurang tepat. Coba lagi.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Tutup pop-up dialog feedback
+                // JIKA BENAR: Lanjut ke scene berikutnya
+                if (isCorrect) {
+                  widget.onNext();
+                }
+              },
+              child: Text(
+                isCorrect
+                    ? 'Lanjut'
+                    : 'Perbaiki', // Mengubah teks secara dinamis
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Ambil soal asli dari database
+    final String soalText =
+        widget.scene.question ?? 'Pertanyaan tidak tersedia';
+
+    // Bungkus opsi dari DB ke dalam Map yang rapi
+    final Map<String, String> options = {
+      if (widget.scene.optionA != null) 'A': widget.scene.optionA!,
+      if (widget.scene.optionB != null) 'B': widget.scene.optionB!,
+      if (widget.scene.optionC != null) 'C': widget.scene.optionC!,
+    };
+
     return SingleChildScrollView(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.end, // Nempel di bawah layar
@@ -32,7 +103,7 @@ class _MultipleChoiceInteractionState extends State<MultipleChoiceInteraction> {
         children: [
           // Teks Soal
           Text(
-            _soal,
+            soalText,
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -42,8 +113,8 @@ class _MultipleChoiceInteractionState extends State<MultipleChoiceInteraction> {
           const SizedBox(height: 16),
 
           // Looping Opsi A, B, C
-          ..._options.entries.map((entry) {
-            return _buildOptionCard(entry.key, entry.value);
+          ...options.entries.map((entry) {
+            return buildOptionCard(entry.key, entry.value);
           }),
           const SizedBox(height: 24),
 
@@ -52,11 +123,7 @@ class _MultipleChoiceInteractionState extends State<MultipleChoiceInteraction> {
             text: "Jawab",
             bgcolor: AppColors.primaryHoney,
             //Tombol di-disable (null) jika user belum memilih opsi apa pun
-            onPressed: _selectedOption == null
-                ? null
-                : () {
-                    // Logic cek jawaban benar/salah nanti di sini
-                  },
+            onPressed: _selectedOption == null ? null : _checkAnswer,
           ),
 
           // Jarak aman untuk device Samsung agar tidak bentrok dengan navbar bawaan hp
@@ -67,7 +134,7 @@ class _MultipleChoiceInteractionState extends State<MultipleChoiceInteraction> {
   }
 
   // Helper Widget untuk membuat Card Option dinamis kondisional
-  Widget _buildOptionCard(String huruf, String teksOpsi) {
+  Widget buildOptionCard(String huruf, String teksOpsi) {
     bool isSelected = _selectedOption == huruf;
 
     return Padding(
