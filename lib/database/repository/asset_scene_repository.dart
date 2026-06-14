@@ -50,4 +50,16 @@ class AssetSceneRepository {
 
     return AssetSceneModel.fromMap(result.first);
   }
+
+  // Update Nama Image (UPDATE)
+  Future<int> updateImageName(int id, String newName) async {
+    final db = await _dbHelper.database;
+
+    return await db.update(
+      'asset_scene',
+      {'image_name': newName},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
 }

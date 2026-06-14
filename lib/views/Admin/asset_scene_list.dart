@@ -38,7 +38,6 @@ class _AssetSceneListState extends State<AssetSceneList> {
   @override
   void initState() {
     super.initState();
-
     loadAssets();
   }
 
@@ -147,12 +146,27 @@ class _AssetSceneListState extends State<AssetSceneList> {
                               fontSize: 16,
                             ),
                           ),
-                          trailing: ActionCircleAdmin(
-                            icon: Icons.delete,
-                            color: AppColors.redComponent,
-                            onTap: () {
-                              confirmDeleteImage(asset.id!);
-                            },
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Tombol icon Edit
+                              ActionCircleAdmin(
+                                icon: Icons.edit,
+                                color: AppColors.blueComponent,
+                                onTap: () {
+                                  _showEditModal(context, asset);
+                                },
+                              ),
+                              const SizedBox(width: 8),
+                              // Tombol icon Delete
+                              ActionCircleAdmin(
+                                icon: Icons.delete,
+                                color: AppColors.redComponent,
+                                onTap: () {
+                                  confirmDeleteImage(asset.id!);
+                                },
+                              ),
+                            ],
                           ),
                           onTap: () {
                             //jika listtile diklik muncul preview gambarnya
@@ -190,7 +204,7 @@ class _AssetSceneListState extends State<AssetSceneList> {
     );
   }
 
-  //function tombol icon delete
+  /// Function tombol icon delete
   void confirmDeleteImage(int imageId) {
     //tampilkan dialog konfirmasi
     showDialog(
@@ -227,6 +241,74 @@ class _AssetSceneListState extends State<AssetSceneList> {
               child: const Text("Ya, Hapus"),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  /// Fungsi untuk memunculkan modal edit
+  void _showEditModal(BuildContext context, AssetSceneModel asset) {
+    // Inisialisasi controller dengan nama gambar existing
+    final TextEditingController nameController = TextEditingController(
+      text: asset.imageName,
+    );
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled:
+          true, // Agar bottom sheet bisa naik saat keyboard muncul
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 20,
+            right: 20,
+            top: 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Edit Nama Gambar",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              TextFieldComponent(
+                hinttext: "Tuliskan nama gambar",
+                textFieldCont: nameController,
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ButtonComponent(
+                  text: "Simpan",
+                  bgcolor: AppColors.primaryHoney,
+                  onPressed: () async {
+                    if (nameController.text.isNotEmpty) {
+                      // 1. Update data di database
+                      await AssetSceneRepository().updateImageName(
+                        asset.id!,
+                        nameController.text,
+                      );
+                      // 2. Tutup bottom sheet
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                      }
+                      // 3. Refresh list agar perubahan langsung terlihat
+                      setState(() {
+                        loadAssets();
+                      });
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(height: 70),
+            ],
+          ),
         );
       },
     );

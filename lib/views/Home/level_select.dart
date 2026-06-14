@@ -273,7 +273,8 @@ class _LevelSelectState extends State<LevelSelect> {
                             final isStatus = currentRole == 'admin' ? 'i' : 'c';
                             return Column(
                               children: [
-                                Expanded(
+                                AspectRatio(
+                                  aspectRatio: 1,
                                   child:
                                       //stack utk icon edit delete admin
                                       Stack(
@@ -402,14 +403,14 @@ class _LevelSelectState extends State<LevelSelect> {
                                   ),
                                 ),
 
-                                //reward XP
-                                Text(
-                                  "Hadiah: 20 XP",
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                                // //reward XP
+                                // Text(
+                                //   "Hadiah: 20 XP",
+                                //   style: TextStyle(
+                                //     fontSize: 10,
+                                //     fontWeight: FontWeight.bold,
+                                //   ),
+                                // ),
                               ],
                             );
                           },

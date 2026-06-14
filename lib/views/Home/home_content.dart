@@ -195,7 +195,17 @@ class _HomeContentState extends State<HomeContent> {
 
               //button create modul utk admin
               if (widget.mode == HomeMode.admin) ...[
-                ButtonCreateAdmin(text: "Buat Modul Baru", onPressed: () {}),
+                ButtonCreateAdmin(
+                  text: "Buat Modul Baru",
+                  onPressed: () {
+                    //blm tersedia
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Fitur ini belum tersedia pada MVP"),
+                      ),
+                    );
+                  },
+                ),
                 SizedBox(height: 12),
               ], //...[ ] artinya memasukkan beberapa widget sekaligus ke dalam list children.
 

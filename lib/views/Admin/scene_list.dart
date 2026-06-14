@@ -26,10 +26,10 @@ class SceneList extends StatefulWidget {
 
 class _SceneListState extends State<SceneList> {
   // Inisialisasi class SceneRepository() tempat fungsi getScenesByLevel berada
-  final sceneRepo = SceneRepository();
+  final _sceneRepo = SceneRepository();
 
   // Variabel untuk menampung fungsi Future agar tidak ter-trigger ulang saat build dikerjakan
-  late Future<List<SceneModel>> scenesFuture;
+  late Future<List<SceneModel>> _scenesFuture;
 
   @override
   void initState() {
@@ -40,7 +40,7 @@ class _SceneListState extends State<SceneList> {
   // Fungsi untuk memicu pengambilan/pembaruan data dari database (refresh data)
   void refreshScenes() {
     setState(() {
-      scenesFuture = sceneRepo.getScenesByLevel(widget.levelId);
+      _scenesFuture = _sceneRepo.getScenesByLevel(widget.levelId);
     });
   }
 
@@ -82,12 +82,36 @@ class _SceneListState extends State<SceneList> {
             const SizedBox(height: 10),
 
             //note admin
+            Row(
+              children: [
+                Text(
+                  'Catatan admin',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(width: 6),
+                ActionCircleAdmin(
+                  icon: Icons.edit,
+                  color: AppColors.blueComponent,
+                  onTap: () {
+                    //blm tersedia
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Fitur ini belum tersedia pada MVP"),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
             if (widget.levelNote?.isNotEmpty ?? false)
               Container(
                 constraints: const BoxConstraints(maxHeight: 60),
                 child: SingleChildScrollView(
                   child: Text(
-                    'Note: ${widget.levelNote}',
+                    '${widget.levelNote}',
                     style: const TextStyle(fontSize: 12),
                   ),
                 ),
@@ -96,7 +120,7 @@ class _SceneListState extends State<SceneList> {
 
             // FutureBuilder diletakkan sebelum pembentukan tombol agar total panjang data (sceneLength) diketahui secara real-time
             FutureBuilder<List<SceneModel>>(
-              future: scenesFuture,
+              future: _scenesFuture,
               builder: (context, snapshot) {
                 // 1. Kondisi Loading data database
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -256,7 +280,7 @@ class _SceneListState extends State<SceneList> {
             onPressed: () async {
               context.pop();
               // Panggil fungsi delete di SceneRepo
-              await sceneRepo.deleteScene(sceneId);
+              await _sceneRepo.deleteScene(sceneId);
               refreshScenes(); // Refresh list setelah dihapus
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Scene berhasil dihapus')),

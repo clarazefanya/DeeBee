@@ -25,16 +25,29 @@ class _SqlInputInteractionState extends State<SqlInputInteraction> {
 
   bool _isResultChecked = false;
 
-  // State untuk menampung data riil hasil kueri
+  // State untuk menampung data hasil kueri
   List<Map<String, dynamic>> _targetResult = [];
   List<Map<String, dynamic>> _userResult = [];
-  String?
-  _errorMessage; // Menyimpan log error SQLite jika query user typo/salah syntax
+  // Menyimpan log error SQLite jika query user typo/salah syntax
+  String? _errorMessage;
+  // Variabel untuk mencatat kueri terakhir yang sukses/gagal di-run
+  String _lastCheckedSql = "";
 
   @override
   void initState() {
     super.initState();
     _loadTargetResult();
+
+    _sqlController.addListener(() {
+      if (_isResultChecked) {
+        setState(() {
+          _isResultChecked = false;
+          _userResult.clear();
+          // Aman dibersihkan di sini karena user memang sedang mengetik ulang
+          _errorMessage = null;
+        });
+      }
+    });
   }
 
   @override
@@ -44,6 +57,7 @@ class _SqlInputInteractionState extends State<SqlInputInteraction> {
     if (oldWidget.scene.id != widget.scene.id) {
       _sqlController.clear();
       _isResultChecked = false;
+      _lastCheckedSql = ""; // Reset pelacak kueri
       _userResult.clear();
       _errorMessage = null;
       _loadTargetResult();
@@ -67,6 +81,7 @@ class _SqlInputInteractionState extends State<SqlInputInteraction> {
 
   // Fungsi untuk menguji query buatan user tanpa mencocokkan jawaban dulu
   void _runUserQuery() async {
+    print("RUN");
     final inputSql = _sqlController.text.trim();
 
     if (inputSql.isEmpty) {
@@ -90,18 +105,17 @@ class _SqlInputInteractionState extends State<SqlInputInteraction> {
     try {
       final res = await _exerciseDb.executeUserQuery(inputSql);
       setState(() {
-        _userResult = res;
+        _userResult = List<Map<String, dynamic>>.from(res);
         _errorMessage = null; // Bersihkan error jika kueri sukses eksekusi
         _isResultChecked = true;
+        _lastCheckedSql = inputSql; // Catat kueri sukses
       });
     } catch (e) {
       setState(() {
         _userResult.clear();
-        _errorMessage = e.toString().replaceAll(
-          'Exception: ',
-          '',
-        ); // Rapikan string error
+        _errorMessage = e.toString().replaceAll('Exception: ', '');
         _isResultChecked = true;
+        _lastCheckedSql = inputSql; // Catat kueri yang menghasilkan error
       });
     }
   }
@@ -110,7 +124,8 @@ class _SqlInputInteractionState extends State<SqlInputInteraction> {
   void _submitAnswer() {
     final inputSql = _sqlController.text.trim();
 
-    if (!_isResultChecked) {
+    // Cek apakah status belum cek hasil, ATAU teks di editor saat ini sudah berubah dibanding kueri terakhir yang dicek
+    if (!_isResultChecked || inputSql != _lastCheckedSql) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -185,7 +200,7 @@ class _SqlInputInteractionState extends State<SqlInputInteraction> {
     );
   }
 
-  // Fungsi helper dinamis untuk membangun tabel data dari list hasil kueri SQLite
+  /// Fungsi helper dinamis untuk membangun tabel data dari list hasil kueri SQLite
   Widget _buildDataTable(List<Map<String, dynamic>> data) {
     if (data.isEmpty) {
       return const Padding(
@@ -301,10 +316,37 @@ class _SqlInputInteractionState extends State<SqlInputInteraction> {
               },
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.asset(
-                  'assets/images/erd.png',
-                  fit: BoxFit.cover,
-                  width: double.infinity,
+                child: Stack(
+                  children: [
+                    Image.asset(
+                      'assets/images/erd.png',
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                    ),
+                    Positioned(
+                      bottom: 5,
+                      right: 5,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 8,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.fullscreen,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -324,7 +366,7 @@ class _SqlInputInteractionState extends State<SqlInputInteraction> {
           maxLines: 4,
           style: const TextStyle(fontFamily: 'monospace', fontSize: 14),
           decoration: InputDecoration(
-            hintText: "SELECT * FROM ...",
+            hintText: "Tulis query disini, contoh: SELECT * FROM ...",
             hintStyle: const TextStyle(color: Color(0xFF626566), fontSize: 14),
             filled: true,
             fillColor: Colors.white,
@@ -386,19 +428,43 @@ class _SqlInputInteractionState extends State<SqlInputInteraction> {
                     )
                   : _errorMessage != null
                   ? Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(
-                        _errorMessage!,
-                        style: const TextStyle(
-                          color: Colors.red,
-                          fontFamily: 'monospace',
-                          fontSize: 13,
-                        ),
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(
+                                Icons.warning_amber_rounded,
+                                color: Colors.red,
+                                size: 18,
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                "Kueri Error / Tidak Valid:",
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            _errorMessage!,
+                            style: const TextStyle(
+                              color: Colors.redAccent,
+                              fontFamily: 'monospace',
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
                       ),
                     )
-                  : _buildDataTable(
-                      _userResult,
-                    ), // Render data dari kueri kustom user asli
+                  :
+                    // Tampilkan tabel jika sukses tanpa error
+                    _buildDataTable(_userResult),
             ),
           ),
         ),
@@ -424,7 +490,7 @@ class _SqlInputInteractionState extends State<SqlInputInteraction> {
             ),
           ],
         ),
-        const SizedBox(height: 50),
+        const SizedBox(height: 130),
       ],
     );
   }
@@ -448,7 +514,11 @@ class OpenImage extends StatelessWidget {
           panEnabled: true,
           minScale: 1.0,
           maxScale: 5.0,
-          child: Image.asset('assets/images/erd.png', fit: BoxFit.contain),
+          child: SizedBox(
+            height: double.infinity,
+            width: double.infinity,
+            child: Image.asset('assets/images/erd.png', fit: BoxFit.contain),
+          ),
         ),
       ),
     );

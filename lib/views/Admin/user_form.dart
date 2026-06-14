@@ -278,7 +278,7 @@ class _UserFormPageState extends State<UserFormPage> {
                             );
                             return;
                           } else {
-                            confirmDelete;
+                            confirmDelete(widget.user!.id!);
                           }
                         },
                       ),
@@ -294,9 +294,17 @@ class _UserFormPageState extends State<UserFormPage> {
     );
   }
 
-  //function tombol simpan
+  ///function tombol simpan
   void save() async {
     if (_userFormKey.currentState!.validate()) {
+      //logic mencegah banned super admin (id 1)
+      if (widget.user?.id == 1 && _statusAktif == 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Tidak bisa menonaktifkan Super Admin")),
+        );
+        return;
+      }
+
       // BIKIN MODEL BARU DARI INPUTAN
       final formUser = UserModel(
         id: widget.user?.id, // ID null jika create, ada isi jika edit
@@ -340,8 +348,8 @@ class _UserFormPageState extends State<UserFormPage> {
     }
   }
 
-  //function tombol hapus pengguna
-  void confirmDelete() {
+  ///function tombol hapus pengguna
+  void confirmDelete(int userId) {
     //tampilkan dialog konfirmasi
     showDialog(
       context: context,
@@ -363,7 +371,8 @@ class _UserFormPageState extends State<UserFormPage> {
                 Navigator.pop(dialogContext); // Tutup dialog dulu
 
                 // Jalankan fungsi delete
-                await UserRepository().deleteUser(widget.user!.id!);
+                // await UserRepository().deleteUser(widget.user!.id!);
+                await UserRepository().deleteUser(userId);
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("Pengguna berhasil dihapus")),

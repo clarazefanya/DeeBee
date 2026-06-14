@@ -4,7 +4,7 @@ class ExerciseDbRepository {
   // Panggil instance DBHelper
   final ExerciseDbHelper _dbHelper = ExerciseDbHelper();
 
-  // Tambahkan method ini di dalam class ExerciseDbHelper
+  // Function menjalankan query input SQL
   Future<List<Map<String, dynamic>>> executeUserQuery(String query) async {
     final db = await _dbHelper.database;
 

@@ -110,13 +110,19 @@ class DBTables {
     // Data User 1 (Sudah main sampai level 5)
     '''
     INSERT INTO users (name, email, password, avatar_index, role, is_active, created_at, last_level_id, xp)
-    VALUES ('Budi Setiawan', 'budi@gmail.com', '12345678', 2, 'user', 1, '2026-05-15 10:30:00', 5, 50);
+    VALUES ('Budi Setiawan', 'budi@gmail.com', '12345678', 2, 'user', 1, '2026-05-15 10:30:00', 5, 20);
     ''',
 
     // Data User 2 (User yang di-banned admin)
     '''
     INSERT INTO users (name, email, password, avatar_index, role, is_active, created_at, last_level_id, xp)
     VALUES ('Tukang Cheat', 'cheater@gmail.com', 'cheat123', 2, 'user', 0, '2026-06-01 14:20:00', 99, 1250);
+    ''',
+
+    // Data User 3 (fresh XP masih 0)
+    '''
+    INSERT INTO users (name, email, password, avatar_index, role, is_active, created_at, last_level_id, xp)
+    VALUES ('Ani Mahalini', 'ani@gmail.com', '12345678', 0, 'user', 1, '2026-06-13 10:30:00', NULL, 0);
     ''',
 
     // Data modul
@@ -128,7 +134,7 @@ class DBTables {
     // Data chapter
     '''
     INSERT INTO chapters (chapter_title, short_desc, long_desc, module_id)
-    VALUES ('SELECT: Menampilkan Data', 'Belajar mengambil data dari tabel','Belajar mengambil data dari tabel menggunakan perintah SELECT, memahami struktur query dasar dan menggunakan syntax WHERE', 1);
+    VALUES ('SELECT: Menampilkan Data', 'Belajar mengambil data dari tabel','Belajar mengambil data dari tabel menggunakan perintah SELECT dan memahami struktur query dasar SELECT.', 1);
     ''',
 
     // Data level - intro
@@ -224,12 +230,12 @@ class DBTables {
     )
     VALUES (
       1,
-      1,
+      2,
       7,
       'Adi',
       '....semoga kalian berdua cocok.',
       'Dialog',
-      '.....'
+      '(.....)'
     );
     ''',
 
@@ -278,10 +284,10 @@ class DBTables {
       'Bian',
       'Pertama-tama, aku mau lihat kemampuanmu, mungkin dimulai dari lihat data produk dulu.',
       'Pilihan ganda',
-      'Perintah SQL untuk menampilkan seluruh data dari tabel users adalah...',
-      'SELECT * FROM users;',
-      'SHOW users;',
-      'DISPLAY users;',
+      'Perintah SQL untuk menampilkan data dari tabel adalah...',
+      'SELECT',
+      'SHOW',
+      'DISPLAY',
       'A',
       10
     );
@@ -331,9 +337,9 @@ class DBTables {
       2,
       8,
       'Bian',
-      'Sekarang tuliskan query untuk hanya melihat nama produknya saja.',
+      'Pada SELECT, * digunakan untuk menampilkan semua kolom. Kamu bisa menampilkan kolom spesifik dengan mengganti * dengan nama kolom yang ingin ditampilkan.\nSekarang tuliskan query untuk hanya melihat nama produknya saja.',
       'Tulis SQL',
-      'Tampilkan hanya data pada kolom "name" dari tabel products.',
+      'Tampilkan data hanya pada kolom "name" dari tabel products.',
       'SELECT name FROM products',
       20
     );
@@ -354,7 +360,7 @@ class DBTables {
     1,
     9,
     'Bian',
-    'Level ini digunakan untuk eksperimen create, edit, dan delete scene.',
+    'Level ini digunakan untuk eksperimen create, edit, dan delete scene Admin.\nAccess: admin@mail.com, admin123',
     'Dialog'
     );
     ''',

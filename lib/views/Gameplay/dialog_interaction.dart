@@ -34,7 +34,7 @@ class _DialogInteractionState extends State<DialogInteraction> {
             style: const TextStyle(
               fontSize: 14,
               fontStyle: FontStyle.italic,
-              color: Colors.grey,
+              color: Colors.blueGrey,
             ),
           ),
           const SizedBox(height: 20),

@@ -7,6 +7,7 @@ import 'package:deebee_user/database/repository/scene_repository.dart';
 import 'package:deebee_user/extension/navigator.dart';
 import 'package:deebee_user/models/asset_scene_model.dart';
 import 'package:deebee_user/models/scene_model.dart';
+import 'package:deebee_user/views/Gameplay/sql_input_interaction.dart';
 import 'package:flutter/material.dart';
 
 class SceneForm extends StatefulWidget {
@@ -329,6 +330,83 @@ class _SceneCreateFormState extends State<SceneForm> {
 
                 if (_selectedTipeScene == 'Susun kata' ||
                     _selectedTipeScene == 'Tulis SQL') ...[
+                  // Accordion Struktur Tabel (ERD)
+                  ExpansionTile(
+                    title: const Text(
+                      "Struktur Tabel",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    iconColor: AppColors.primaryHoney,
+                    collapsedIconColor: AppColors.primaryBlack,
+                    tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+                    collapsedShape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: const BorderSide(
+                        color: AppColors.borderBrown,
+                        width: 1,
+                      ),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: const BorderSide(
+                        color: AppColors.primaryHoney,
+                        width: 2,
+                      ),
+                    ),
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              //buka preview image (func ada di sql_input_interaction.dart)
+                              builder: (_) => const OpenImage(),
+                            ),
+                          );
+                        },
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Stack(
+                            children: [
+                              Image.asset(
+                                'assets/images/erd.png',
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                              ),
+                              Positioned(
+                                bottom: 5,
+                                right: 5,
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black54,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black26,
+                                        blurRadius: 8,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Icon(
+                                    Icons.fullscreen,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
                   // Pertanyaan
                   _buildQuestion(),
 
@@ -348,11 +426,9 @@ class _SceneCreateFormState extends State<SceneForm> {
                       }
 
                       //validasi cuman boleh query SELECT
-                      if (_selectedTipeScene == 'Tulis SQL') {
-                        final sql = val.trim().toUpperCase();
-                        if (!sql.startsWith('SELECT')) {
-                          return 'Untuk versi saat ini hanya query SELECT yang diperbolehkan';
-                        }
+                      final sql = val.trim().toUpperCase();
+                      if (!sql.startsWith('SELECT')) {
+                        return 'Saat ini hanya query SELECT yang diperbolehkan';
                       }
                       return null;
                     },
@@ -449,6 +525,7 @@ class _SceneCreateFormState extends State<SceneForm> {
       ),
     );
   }
+  // end method PREVIEW dropdown background/karakter
 
   Column _buildQuestion() {
     return Column(

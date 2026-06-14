@@ -222,9 +222,8 @@ class _WordArrangementInteractionState
             children: [
               Expanded(
                 child: ButtonComponent(
-                  text: "Hapus Jawaban",
-                  fontsize: 15,
-                  bgcolor: AppColors.redComponent,
+                  text: "Hapus",
+                  bgcolor: AppColors.primaryCream,
                   onPressed: _selectedIndexes.isEmpty
                       ? null // Matikan tombol jika belum nulis apa-apa
                       : () {
