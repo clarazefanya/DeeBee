@@ -52,7 +52,12 @@ class _HomeState extends State<Home> {
           //jika mode admin, tampilkan halaman sesuai drawer admin. selain admin maka tampilkan home biasa
           widget.mode == HomeMode.admin
           ? adminPages[_selectedAdminPage]
-          : const HomeContent(mode: HomeMode.user),
+          : HomeContent(
+              mode: HomeMode.user,
+              onRefresh: () {
+                setState(() {});
+              },
+            ),
     );
   }
 }

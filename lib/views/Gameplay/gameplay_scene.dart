@@ -17,12 +17,14 @@ class Gameplay extends StatefulWidget {
     required this.namaLevel,
     required this.levelId,
     required this.scenes,
+    this.isIntro = false,
   });
 
   // final GameplayType gameplayType;
   final String namaLevel;
   final int levelId;
   final List<SceneModel> scenes;
+  final bool isIntro;
 
   @override
   State<Gameplay> createState() => _GameplayState();
@@ -73,13 +75,18 @@ class _GameplayState extends State<Gameplay> {
           TextButton(
             onPressed: () {
               context.pop(); // Keluar dialog
-              context.pop(); // Kembali ke LevelSelect
+              context.pop(true); // Kembali ke LevelSelect
             },
             child: const Text('Selesai'),
           ),
         ],
       ),
     );
+  }
+
+  //untuk refresh halaman biar XP di appbar terupdate
+  void refreshPage() {
+    setState(() {});
   }
 
   @override
@@ -176,19 +183,28 @@ class _GameplayState extends State<Gameplay> {
           scene: _currentScene,
           // Melempar fungsi untuk memicu scene berikutnya
           onNext: nextScene,
+          // Melempar flag isIntro
+          isIntro: widget.isIntro,
         );
       case GameplayType.multipleChoice:
         return MultipleChoiceInteraction(
           scene: _currentScene,
           onNext: nextScene,
+          //untuk trigger refresh 1 hlmn gameplay
+          onRefresh: refreshPage,
         );
       case GameplayType.wordArrangement:
         return WordArrangementInteraction(
           scene: _currentScene,
           onNext: nextScene,
+          onRefresh: refreshPage,
         );
       case GameplayType.sqlInput:
-        return SqlInputInteraction(scene: _currentScene, onNext: nextScene);
+        return SqlInputInteraction(
+          scene: _currentScene,
+          onNext: nextScene,
+          onRefresh: refreshPage,
+        );
       default:
         return const SizedBox.shrink();
     }

@@ -10,6 +10,7 @@ class UserModel {
   final bool isActive;
   final String createdAt;
   final int? lastLevelId;
+  final int? lastSceneId;
   final int xp;
 
   UserModel({
@@ -22,6 +23,7 @@ class UserModel {
     required this.isActive,
     required this.createdAt,
     this.lastLevelId,
+    this.lastSceneId,
     required this.xp,
   });
 
@@ -36,6 +38,7 @@ class UserModel {
       'is_active': isActive ? 1 : 0,
       'created_at': createdAt,
       'last_level_id': lastLevelId,
+      'last_scene_id': lastSceneId,
       'xp': xp,
     };
   }
@@ -52,6 +55,9 @@ class UserModel {
       createdAt: map['created_at'] as String,
       lastLevelId: map['last_level_id'] != null
           ? map['last_level_id'] as int
+          : null,
+      lastSceneId: map['last_scene_id'] != null
+          ? map['last_scene_id'] as int
           : null,
       xp: map['xp'] != null ? map['xp'] as int : 0,
     );

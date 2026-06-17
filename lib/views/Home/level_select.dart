@@ -62,7 +62,7 @@ class _LevelSelectState extends State<LevelSelect> {
                   children: [
                     GestureDetector(
                       onTap: () {
-                        context.pop();
+                        context.pop(true);
                       },
                       child: Padding(
                         padding: const EdgeInsets.only(top: 6),
@@ -231,7 +231,7 @@ class _LevelSelectState extends State<LevelSelect> {
                                     namaLevel: "Intro",
                                     levelId: intro.id!,
                                     scenes: scenes,
-                                    // Kirim list scenes yang didapat dari DB
+                                    isIntro: true,
                                   ),
                                 );
                               }
@@ -315,7 +315,7 @@ class _LevelSelectState extends State<LevelSelect> {
                                                   return;
                                                 }
                                                 // Arahkan ke halaman Gameplay
-                                                context.push(
+                                                await context.push(
                                                   Gameplay(
                                                     namaLevel:
                                                         "Level ${index + 1}",
@@ -323,6 +323,7 @@ class _LevelSelectState extends State<LevelSelect> {
                                                     scenes: scenes,
                                                   ),
                                                 );
+                                                setState(() {});
                                               }
                                             },
                                             child: Card(

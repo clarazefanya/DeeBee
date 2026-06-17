@@ -1,18 +1,22 @@
 import 'package:collection/collection.dart';
 import 'package:deebee_user/components/components.dart'; // Sesuaikan import kamu
 import 'package:deebee_user/constants/colors.dart';
+import 'package:deebee_user/database/preference_handler.dart';
 import 'package:deebee_user/database/repository/exercise_db_repository.dart';
 import 'package:deebee_user/models/scene_model.dart';
+import 'package:deebee_user/views/Gameplay/progress_service.dart';
 import 'package:flutter/material.dart';
 
 class SqlInputInteraction extends StatefulWidget {
   final SceneModel scene; // Terima data scene aktif
   final VoidCallback onNext; // Terima fungsi trigger scene selanjutnya
+  final VoidCallback onRefresh; // Terima fungsi trigger refresh 1 halaman
 
   const SqlInputInteraction({
     super.key,
     required this.scene,
     required this.onNext,
+    required this.onRefresh,
   });
 
   @override
@@ -20,6 +24,9 @@ class SqlInputInteraction extends StatefulWidget {
 }
 
 class _SqlInputInteractionState extends State<SqlInputInteraction> {
+  //Ambil userId dari SharedPreferences
+  final int? currentUserId = PreferenceHandler.userId;
+
   final TextEditingController _sqlController = TextEditingController();
   final _exerciseDb = ExerciseDbRepository();
 
@@ -121,7 +128,7 @@ class _SqlInputInteractionState extends State<SqlInputInteraction> {
   }
 
   // Logika memvalidasi kesamaan output tabel user vs target kunci jawaban
-  void _submitAnswer() {
+  Future<void> _submitAnswer() async {
     final inputSql = _sqlController.text.trim();
 
     // Cek apakah status belum cek hasil, ATAU teks di editor saat ini sudah berubah dibanding kueri terakhir yang dicek
@@ -150,6 +157,12 @@ class _SqlInputInteractionState extends State<SqlInputInteraction> {
       _userResult,
       _targetResult,
     );
+
+    // Jika jawaban benar: simpan progress dan tambah xp, refresh halaman
+    if (isCorrect) {
+      await saveSceneProgress(userId: currentUserId!, scene: widget.scene);
+      widget.onRefresh();
+    }
 
     showDialog(
       context: context,

@@ -2,7 +2,7 @@ import 'package:deebee_user/database/db_helper.dart';
 import 'package:deebee_user/models/user_scene_progress_model.dart';
 
 class UserSceneProgressRepository {
-  // create progress?
+  // Create progress
   Future<int> createProgress(UserSceneProgressModel progress) async {
     final db = await DBHelper().database;
 
@@ -10,7 +10,7 @@ class UserSceneProgressRepository {
   }
 
   // Read progress satu scene milik user (READ)
-  // Scene ini sudah pernah diselesaikan?
+  // Apakah Scene ini sudah pernah diselesaikan?
   Future<UserSceneProgressModel?> getProgressByUserAndScene(
     int userId,
     int sceneId,

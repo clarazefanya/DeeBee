@@ -1,16 +1,20 @@
 import 'package:deebee_user/components/components.dart'; // Sesuaikan import kamu
 import 'package:deebee_user/constants/colors.dart';
+import 'package:deebee_user/database/preference_handler.dart';
 import 'package:deebee_user/models/scene_model.dart';
+import 'package:deebee_user/views/Gameplay/progress_service.dart';
 import 'package:flutter/material.dart';
 
 class MultipleChoiceInteraction extends StatefulWidget {
   final SceneModel scene; // Terima data scene aktif
   final VoidCallback onNext; // Terima fungsi trigger scene selanjutnya
+  final VoidCallback onRefresh; // Terima fungsi trigger refresh 1 halaman
 
   const MultipleChoiceInteraction({
     super.key,
     required this.scene,
     required this.onNext,
+    required this.onRefresh,
   });
 
   @override
@@ -19,16 +23,25 @@ class MultipleChoiceInteraction extends StatefulWidget {
 }
 
 class _MultipleChoiceInteractionState extends State<MultipleChoiceInteraction> {
+  //Ambil userId dari SharedPreferences
+  final int? currentUserId = PreferenceHandler.userId;
+
   // Simpan status opsi yang dipilih (null berarti belum ada yang dipilih)
   String? _selectedOption;
 
   // Fungsi untuk memvalidasi jawaban saat tombol di-klik
-  void _checkAnswer() {
+  Future<void> _checkAnswer() async {
     if (_selectedOption == null) return;
 
     // Ambil kunci jawaban asli dari database (A, B, atau C)
     final String correctKey = widget.scene.answerKeyMultipleChoice ?? '';
     final bool isCorrect = _selectedOption == correctKey;
+
+    // Jika jawaban benar: simpan progress dan tambah xp, refresh halaman
+    if (isCorrect) {
+      await saveSceneProgress(userId: currentUserId!, scene: widget.scene);
+      widget.onRefresh();
+    }
 
     // Tampilkan feedback pop-up berdasarkan kebenaran jawaban
     showDialog(

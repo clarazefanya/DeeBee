@@ -12,9 +12,10 @@ import 'package:deebee_user/views/Home/chapter_select.dart';
 import 'package:flutter/material.dart';
 
 class HomeContent extends StatefulWidget {
-  const HomeContent({super.key, required this.mode});
+  const HomeContent({super.key, required this.mode, this.onRefresh});
 
   final HomeMode mode;
+  final VoidCallback? onRefresh;
 
   @override
   State<HomeContent> createState() => _HomeContentState();
@@ -239,7 +240,7 @@ class _HomeContentState extends State<HomeContent> {
                         children: [
                           //card
                           InkWell(
-                            onTap: () {
+                            onTap: () async {
                               if (widget.mode == HomeMode.admin) {
                                 context.push(
                                   ChapterSelect(
@@ -249,13 +250,15 @@ class _HomeContentState extends State<HomeContent> {
                                   ),
                                 );
                               } else {
-                                context.push(
+                                await context.push(
                                   ChapterSelect(
                                     mode: HomeMode.user,
                                     moduleId: module.id!,
                                     moduleName: module.moduleName,
                                   ),
                                 );
+                                setState(() {});
+                                widget.onRefresh?.call();
                               }
                             },
                             child: Card(

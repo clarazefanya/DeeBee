@@ -54,7 +54,7 @@ class _ChapterSelectState extends State<ChapterSelect> {
                   children: [
                     GestureDetector(
                       onTap: () {
-                        context.pop();
+                        context.pop(true);
                       },
                       child: Padding(
                         padding: const EdgeInsets.only(top: 6),
@@ -120,7 +120,7 @@ class _ChapterSelectState extends State<ChapterSelect> {
                           children: [
                             //card
                             InkWell(
-                              onTap: () {
+                              onTap: () async {
                                 if (widget.mode == HomeMode.admin) {
                                   context.push(
                                     LevelSelect(
@@ -132,7 +132,7 @@ class _ChapterSelectState extends State<ChapterSelect> {
                                     ),
                                   );
                                 } else {
-                                  context.push(
+                                  await context.push(
                                     LevelSelect(
                                       mode: HomeMode.user,
                                       chapterId: chapter.id!,
@@ -141,6 +141,7 @@ class _ChapterSelectState extends State<ChapterSelect> {
                                       chapterLongDesc: chapter.longDesc,
                                     ),
                                   );
+                                  setState(() {});
                                 }
                               },
                               child: Card(

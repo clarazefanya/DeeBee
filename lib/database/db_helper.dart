@@ -33,6 +33,7 @@ class DBHelper {
         await db.execute(DBTables.createChaptersTable);
         await db.execute(DBTables.createLevelsTable);
         await db.execute(DBTables.createScenesTable);
+        await db.execute(DBTables.createScenesProgressTable);
 
         // 2. Eksekusi insert data demo/dummy
         for (String query in DBTables.dummyDataQueries) {

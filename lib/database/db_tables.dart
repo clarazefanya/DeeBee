@@ -11,6 +11,7 @@ class DBTables {
       is_active INTEGER NOT NULL DEFAULT 1,
       created_at TEXT NOT NULL,
       last_level_id INTEGER NULL,
+      last_scene_id INTEGER NULL,
       xp INTEGER NOT NULL DEFAULT 0
     );
   ''';
