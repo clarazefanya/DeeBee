@@ -1,14 +1,14 @@
 import 'dart:async';
 
-import 'package:deebee_user/components/components.dart';
+import 'package:deebee_user/components/components_admin.dart';
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/database/preference_handler.dart';
 import 'package:deebee_user/database/repository/module_repository.dart';
 import 'package:deebee_user/extension/navigator.dart';
 import 'package:deebee_user/models/home_mode_model.dart';
 import 'package:deebee_user/models/module_model.dart';
-import 'package:deebee_user/views/Home/banner_carousel.dart';
-import 'package:deebee_user/views/Home/chapter_select.dart';
+import 'package:deebee_user/views/home/banner_carousel.dart';
+import 'package:deebee_user/views/home/chapter_select.dart';
 import 'package:flutter/material.dart';
 
 class HomeContent extends StatefulWidget {

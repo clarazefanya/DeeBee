@@ -2,7 +2,7 @@ import 'package:deebee_user/components/components.dart'; // Sesuaikan import kam
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/database/preference_handler.dart';
 import 'package:deebee_user/models/scene_model.dart';
-import 'package:deebee_user/views/Gameplay/progress_service.dart';
+import 'package:deebee_user/services/gameplay_progress_service.dart';
 import 'package:flutter/material.dart';
 
 class WordArrangementInteraction extends StatefulWidget {

@@ -1,6 +1,6 @@
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/extension/navigator.dart';
-import 'package:deebee_user/views/Admin/asset_scene_list.dart';
+import 'package:deebee_user/views/admin/asset_scene_list.dart';
 import 'package:flutter/material.dart';
 
 class AssetScene extends StatefulWidget {

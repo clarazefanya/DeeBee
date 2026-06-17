@@ -1,8 +1,8 @@
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/database/preference_handler.dart';
 import 'package:deebee_user/models/home_mode_model.dart';
-import 'package:deebee_user/views/Home/home.dart';
-import 'package:deebee_user/views/Profile/profile.dart';
+import 'package:deebee_user/views/home/home.dart';
+import 'package:deebee_user/views/profile/profile.dart';
 import 'package:flutter/material.dart';
 
 class BottomNavBar extends StatefulWidget {

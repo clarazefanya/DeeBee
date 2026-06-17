@@ -3,7 +3,7 @@ import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/database/repository/user_repository.dart';
 import 'package:deebee_user/extension/navigator.dart';
 import 'package:deebee_user/models/user_model.dart';
-import 'package:deebee_user/views/login.dart';
+import 'package:deebee_user/views/auth/login.dart';
 import 'package:flutter/material.dart';
 
 class Register extends StatefulWidget {

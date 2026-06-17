@@ -3,8 +3,8 @@ import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/database/preference_handler.dart';
 import 'package:deebee_user/database/repository/user_repository.dart';
 import 'package:deebee_user/extension/navigator.dart';
-import 'package:deebee_user/views/bottom_navbar.dart';
-import 'package:deebee_user/views/register.dart';
+import 'package:deebee_user/views/auth/register.dart';
+import 'package:deebee_user/views/navigation/bottom_navbar.dart';
 import 'package:flutter/material.dart';
 
 class Login extends StatefulWidget {

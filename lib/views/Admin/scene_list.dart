@@ -1,9 +1,10 @@
 import 'package:deebee_user/components/components.dart';
+import 'package:deebee_user/components/components_admin.dart';
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/database/repository/scene_repository.dart';
 import 'package:deebee_user/extension/navigator.dart';
 import 'package:deebee_user/models/scene_model.dart';
-import 'package:deebee_user/views/Admin/scene_form.dart';
+import 'package:deebee_user/views/admin/scene_form.dart';
 import 'package:flutter/material.dart';
 
 class SceneList extends StatefulWidget {

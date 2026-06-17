@@ -1,7 +1,7 @@
 import 'package:deebee_user/database/preference_handler.dart';
 import 'package:deebee_user/extension/navigator.dart';
-import 'package:deebee_user/views/bottom_navbar.dart';
-import 'package:deebee_user/views/login.dart';
+import 'package:deebee_user/views/auth/login.dart';
+import 'package:deebee_user/views/navigation/bottom_navbar.dart';
 import 'package:flutter/material.dart';
 
 class SplashScreen extends StatefulWidget {

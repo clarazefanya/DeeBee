@@ -1,4 +1,5 @@
 import 'package:deebee_user/components/components.dart';
+import 'package:deebee_user/components/components_admin.dart';
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/database/preference_handler.dart';
 import 'package:deebee_user/database/repository/level_repository.dart';
@@ -6,8 +7,8 @@ import 'package:deebee_user/database/repository/scene_repository.dart';
 import 'package:deebee_user/extension/navigator.dart';
 import 'package:deebee_user/models/home_mode_model.dart';
 import 'package:deebee_user/models/level_model.dart';
-import 'package:deebee_user/views/Admin/scene_list.dart';
-import 'package:deebee_user/views/Gameplay/gameplay_scene.dart';
+import 'package:deebee_user/views/admin/scene_list.dart';
+import 'package:deebee_user/views/gameplay/gameplay_scene.dart';
 import 'package:flutter/material.dart';
 
 class LevelSelect extends StatefulWidget {
