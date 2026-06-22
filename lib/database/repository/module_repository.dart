@@ -15,4 +15,20 @@ class ModuleRepository {
 
     return result.map((e) => ModuleModel.fromMap(e)).toList();
   }
+
+  // dapatkan module dari id nya
+  Future<ModuleModel?> getModuleById(int moduleId) async {
+    final db = await DBHelper().database;
+
+    final result = await db.query(
+      'modules',
+      where: 'id = ?',
+      whereArgs: [moduleId],
+      limit: 1,
+    );
+
+    if (result.isEmpty) return null;
+
+    return ModuleModel.fromMap(result.first);
+  }
 }

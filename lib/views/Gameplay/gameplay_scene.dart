@@ -3,7 +3,7 @@ import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/database/repository/asset_scene_repository.dart';
 import 'package:deebee_user/extension/navigator.dart';
 import 'package:deebee_user/models/asset_scene_model.dart';
-import 'package:deebee_user/models/gameplay_enum_model.dart';
+import 'package:deebee_user/models/enums/gameplay_enum_model.dart';
 import 'package:deebee_user/models/scene_model.dart';
 import 'package:deebee_user/views/Gameplay/dialog_interaction.dart';
 import 'package:deebee_user/views/Gameplay/multiple_choice_interaction.dart';

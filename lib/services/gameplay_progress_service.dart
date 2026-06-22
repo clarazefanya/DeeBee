@@ -4,12 +4,12 @@ import 'package:deebee_user/database/repository/user_scene_progress_repository.d
 import 'package:deebee_user/models/scene_model.dart';
 import 'package:deebee_user/models/user_scene_progress_model.dart';
 
-class ProgressService {
+class GameplayProgressService {
   final UserRepository userRepository;
   final UserSceneProgressRepository progressRepository;
   final SceneRepository sceneRepository;
 
-  ProgressService({
+  GameplayProgressService({
     required this.userRepository,
     required this.progressRepository,
     required this.sceneRepository,
@@ -92,11 +92,11 @@ Future<void> saveSceneProgress({
   if (isIntro) return;
 
   //jika isIntro false, simpan progress
-  final progressService = ProgressService(
+  final gameplayProgressService = GameplayProgressService(
     userRepository: UserRepository(),
     progressRepository: UserSceneProgressRepository(),
     sceneRepository: SceneRepository(),
   );
 
-  await progressService.completeScene(userId: userId, scene: scene);
+  await gameplayProgressService.completeScene(userId: userId, scene: scene);
 }

@@ -64,4 +64,11 @@ class UserSceneProgressRepository {
       whereArgs: [id],
     );
   }
+
+  // Cek status scene apakah sudah completed
+  Future<bool> isSceneCompleted(int userId, int sceneId) async {
+    final progress = await getProgressByUserAndScene(userId, sceneId);
+
+    return progress?.isCompleted ?? false;
+  }
 }

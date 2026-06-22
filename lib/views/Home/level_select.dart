@@ -5,8 +5,10 @@ import 'package:deebee_user/database/preference_handler.dart';
 import 'package:deebee_user/database/repository/level_repository.dart';
 import 'package:deebee_user/database/repository/scene_repository.dart';
 import 'package:deebee_user/extension/navigator.dart';
-import 'package:deebee_user/models/home_mode_model.dart';
+import 'package:deebee_user/models/enums/home_mode_model.dart';
+import 'package:deebee_user/models/enums/progress_status.dart';
 import 'package:deebee_user/models/level_model.dart';
+import 'package:deebee_user/services/progress_service.dart';
 import 'package:deebee_user/views/admin/scene_list.dart';
 import 'package:deebee_user/views/gameplay/gameplay_scene.dart';
 import 'package:flutter/material.dart';
@@ -35,15 +37,17 @@ class _LevelSelectState extends State<LevelSelect> {
   //future di level
   late Future<List<LevelModel>> _levelsFuture;
 
+  //Ambil userId n role dari SharedPreferences
+  late int? currentUserId = PreferenceHandler.userId;
+  final String? currentRole = PreferenceHandler.role;
+
   @override
   void initState() {
     super.initState();
 
+    currentUserId = PreferenceHandler.userId;
     _levelsFuture = LevelRepository().getLevelsByChapter(widget.chapterId);
   }
-
-  //Ambil role dari SharedPreferences
-  final String? currentRole = PreferenceHandler.role;
 
   @override
   Widget build(BuildContext context) {
@@ -270,150 +274,189 @@ class _LevelSelectState extends State<LevelSelect> {
 
                             final level = gameplayLevels[index];
 
-                            //card kotak level
-                            final isStatus = currentRole == 'admin' ? 'i' : 'c';
-                            return Column(
-                              children: [
-                                AspectRatio(
-                                  aspectRatio: 1,
-                                  child:
-                                      //stack utk icon edit delete admin
-                                      Stack(
-                                        clipBehavior: Clip.none,
-                                        children: [
-                                          InkWell(
-                                            onTap: () async {
-                                              if (widget.mode ==
-                                                  HomeMode.admin) {
-                                                //jika mode admin, ke halaman scene list
-                                                context.push(
-                                                  SceneList(
-                                                    namaLevel:
-                                                        "Level ${index + 1}",
-                                                    levelId: level.id!,
-                                                    levelNote: level.note,
-                                                  ),
-                                                );
-                                              } else {
-                                                //selain mode admin, ke halaman gameplay scene
-                                                //Ambil data scene untuk level gameplay ini
-                                                final scenes =
-                                                    await SceneRepository()
-                                                        .getScenesByLevel(
-                                                          level.id!,
-                                                        );
+                            // future builder utk status level
+                            return FutureBuilder<ProgressStatus>(
+                              future: ProgressService().getLevelStatus(
+                                currentUserId!,
+                                level.id!,
+                              ),
+                              builder: (context, statusSnapshot) {
+                                if (!statusSnapshot.hasData) {
+                                  return const SizedBox.shrink();
+                                }
 
-                                                if (scenes.isEmpty) {
-                                                  ScaffoldMessenger.of(
-                                                    context,
-                                                  ).showSnackBar(
-                                                    const SnackBar(
-                                                      content: Text(
-                                                        'Konten level belum tersedia',
+                                final status = statusSnapshot.data!;
+
+                                String isStatus;
+
+                                switch (status) {
+                                  case ProgressStatus.completed:
+                                    isStatus = 'c';
+                                    break;
+
+                                  case ProgressStatus.inProgress:
+                                    isStatus = 'i';
+                                    break;
+
+                                  case ProgressStatus.locked:
+                                    isStatus = 'l';
+                                    break;
+                                }
+
+                                //card kotak level
+                                return Column(
+                                  children: [
+                                    AspectRatio(
+                                      aspectRatio: 1,
+                                      child:
+                                          //stack utk icon edit delete admin
+                                          Stack(
+                                            clipBehavior: Clip.none,
+                                            children: [
+                                              InkWell(
+                                                onTap: () async {
+                                                  //jika status locked, tdk bisa dipencet
+                                                  if (status ==
+                                                      ProgressStatus.locked) {
+                                                    return;
+                                                  }
+
+                                                  if (widget.mode ==
+                                                      HomeMode.admin) {
+                                                    //jika mode admin, ke halaman scene list
+                                                    context.push(
+                                                      SceneList(
+                                                        namaLevel:
+                                                            "Level ${index + 1}",
+                                                        levelId: level.id!,
+                                                        levelNote: level.note,
                                                       ),
-                                                    ),
-                                                  );
-                                                  return;
-                                                }
-                                                // Arahkan ke halaman Gameplay
-                                                await context.push(
-                                                  Gameplay(
-                                                    namaLevel:
-                                                        "Level ${index + 1}",
-                                                    levelId: level.id!,
-                                                    scenes: scenes,
-                                                  ),
-                                                );
-                                                setState(() {});
-                                              }
-                                            },
-                                            child: Card(
-                                              margin: EdgeInsets.zero,
-                                              elevation: isStatus == "l"
-                                                  ? 0
-                                                  : 2,
-                                              color: isStatus == "c"
-                                                  ? AppColors.statusCompleted
-                                                  : isStatus == "i"
-                                                  ? AppColors.primaryHoney
-                                                  : AppColors.statusLocked,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(16),
-                                              ),
-                                              child: SizedBox.expand(
-                                                // width: double.infinity,
-                                                // height: 80,
-                                                child: Icon(
-                                                  isStatus == "c"
-                                                      ? Icons
-                                                            .check_circle_outline
-                                                      : isStatus == "i"
-                                                      ? Icons.play_arrow
-                                                      : Icons.lock_outline,
-                                                  color: isStatus == "c"
-                                                      ? AppColors
-                                                            .statusCompletedIcon
-                                                      : Colors.black,
-                                                  size: 32,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
+                                                    );
+                                                  } else {
+                                                    //selain mode admin, ke halaman gameplay scene
+                                                    //Ambil data scene untuk level gameplay ini
+                                                    final scenes =
+                                                        await SceneRepository()
+                                                            .getScenesByLevel(
+                                                              level.id!,
+                                                            );
 
-                                          //tombol delete utk admin
-                                          if (widget.mode ==
-                                              HomeMode.admin) ...[
-                                            Positioned(
-                                              top: 5,
-                                              right: 5,
-                                              child: Row(
-                                                children: [
-                                                  SizedBox(width: 4),
-                                                  ActionCircleAdmin(
-                                                    icon: Icons.delete,
-                                                    color:
-                                                        AppColors.redComponent,
-                                                    onTap: () {
-                                                      //blm tersedia
+                                                    if (scenes.isEmpty) {
                                                       ScaffoldMessenger.of(
                                                         context,
                                                       ).showSnackBar(
                                                         const SnackBar(
                                                           content: Text(
-                                                            "Fitur ini belum tersedia pada MVP",
+                                                            'Konten level belum tersedia',
                                                           ),
                                                         ),
                                                       );
-                                                    },
+                                                      return;
+                                                    }
+                                                    // Arahkan ke halaman Gameplay
+                                                    await context.push(
+                                                      Gameplay(
+                                                        namaLevel:
+                                                            "Level ${index + 1}",
+                                                        levelId: level.id!,
+                                                        scenes: scenes,
+                                                      ),
+                                                    );
+                                                    setState(() {});
+                                                  }
+                                                },
+                                                child: Card(
+                                                  margin: EdgeInsets.zero,
+                                                  elevation: isStatus == "l"
+                                                      ? 0
+                                                      : 2,
+                                                  color: isStatus == "c"
+                                                      ? AppColors
+                                                            .statusCompleted
+                                                      : isStatus == "i"
+                                                      ? AppColors.primaryHoney
+                                                      : AppColors.statusLocked,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          16,
+                                                        ),
                                                   ),
-                                                ],
+                                                  child: SizedBox.expand(
+                                                    // width: double.infinity,
+                                                    // height: 80,
+                                                    child: Icon(
+                                                      isStatus == "c"
+                                                          ? Icons
+                                                                .check_circle_outline
+                                                          : isStatus == "i"
+                                                          ? Icons.play_arrow
+                                                          : Icons.lock_outline,
+                                                      color: isStatus == "c"
+                                                          ? AppColors
+                                                                .statusCompletedIcon
+                                                          : Colors.black,
+                                                      size: 32,
+                                                    ),
+                                                  ),
+                                                ),
                                               ),
-                                            ),
-                                          ], //if
-                                        ], ////b
-                                      ), /////b
-                                ),
-                                SizedBox(height: 10),
 
-                                //nomor level
-                                Text(
-                                  "Level ${index + 1}",
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
+                                              //tombol delete utk admin
+                                              if (widget.mode ==
+                                                  HomeMode.admin) ...[
+                                                Positioned(
+                                                  top: 5,
+                                                  right: 5,
+                                                  child: Row(
+                                                    children: [
+                                                      SizedBox(width: 4),
+                                                      ActionCircleAdmin(
+                                                        icon: Icons.delete,
+                                                        color: AppColors
+                                                            .redComponent,
+                                                        onTap: () {
+                                                          //blm tersedia
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
+                                                            const SnackBar(
+                                                              content: Text(
+                                                                "Fitur ini belum tersedia pada MVP",
+                                                              ),
+                                                            ),
+                                                          );
+                                                        },
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ], //if
+                                            ], ////b
+                                          ), /////b
+                                    ),
+                                    SizedBox(height: 10),
 
-                                // //reward XP
-                                // Text(
-                                //   "Hadiah: 20 XP",
-                                //   style: TextStyle(
-                                //     fontSize: 10,
-                                //     fontWeight: FontWeight.bold,
-                                //   ),
-                                // ),
-                              ],
+                                    //nomor level
+                                    Text(
+                                      "Level ${index + 1}",
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+
+                                    // //reward XP
+                                    // Text(
+                                    //   "Hadiah: 20 XP",
+                                    //   style: TextStyle(
+                                    //     fontSize: 10,
+                                    //     fontWeight: FontWeight.bold,
+                                    //   ),
+                                    // ),
+                                  ],
+                                );
+                              },
                             );
                           },
                         ),

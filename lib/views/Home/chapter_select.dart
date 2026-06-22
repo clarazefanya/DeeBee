@@ -5,7 +5,9 @@ import 'package:deebee_user/database/preference_handler.dart';
 import 'package:deebee_user/database/repository/chapter_repository.dart';
 import 'package:deebee_user/extension/navigator.dart';
 import 'package:deebee_user/models/chapter_model.dart';
-import 'package:deebee_user/models/home_mode_model.dart';
+import 'package:deebee_user/models/enums/home_mode_model.dart';
+import 'package:deebee_user/models/enums/progress_status.dart';
+import 'package:deebee_user/services/progress_service.dart';
 import 'package:deebee_user/views/home/level_select.dart';
 import 'package:flutter/material.dart';
 
@@ -29,14 +31,32 @@ class _ChapterSelectState extends State<ChapterSelect> {
   //future di chapter
   late Future<List<ChapterModel>> _chaptersFuture;
 
+  //Ambil userID n role dari SharedPreferences
+  final int? currentUserId = PreferenceHandler.userId;
+  final String? currentRole = PreferenceHandler.role;
+
   @override
   void initState() {
     super.initState();
     _chaptersFuture = ChapterRepository().getChaptersByModule(widget.moduleId);
   }
 
-  //Ambil role dari SharedPreferences
-  final String? currentRole = PreferenceHandler.role;
+  // helper get chapter status n progress
+  Future<Map<String, dynamic>> _getChapterData(int chapterId) async {
+    final progressService = ProgressService();
+
+    final status = await progressService.getChapterStatus(
+      currentUserId!,
+      chapterId,
+    );
+
+    final progress = await progressService.getChapterProgress(
+      currentUserId!,
+      chapterId,
+    );
+
+    return {'status': status, 'progress': progress};
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -114,221 +134,260 @@ class _ChapterSelectState extends State<ChapterSelect> {
                         //start card chapter
                         // var ambil data kolom chapters
                         final chapter = chapters[index];
-                        // helper status
-                        final isStatus = currentRole == 'admin' ? 'i' : 'c';
 
-                        return Stack(
-                          children: [
-                            //card
-                            InkWell(
-                              onTap: () async {
-                                if (widget.mode == HomeMode.admin) {
-                                  context.push(
-                                    LevelSelect(
-                                      mode: HomeMode.admin,
-                                      chapterId: chapter.id!,
-                                      chapterName: "Chapter ${index + 1}",
-                                      chapterTitle: chapter.chapterTitle,
-                                      chapterLongDesc: chapter.longDesc,
+                        return FutureBuilder<Map<String, dynamic>>(
+                          future: _getChapterData(chapter.id!),
+                          builder: (context, snapshot) {
+                            if (!snapshot.hasData) {
+                              return const SizedBox.shrink();
+                            }
+
+                            final status =
+                                snapshot.data!['status'] as ProgressStatus;
+
+                            final progress =
+                                snapshot.data!['progress'] as double;
+
+                            String isStatus;
+
+                            switch (status) {
+                              case ProgressStatus.completed:
+                                isStatus = 'c';
+                                break;
+
+                              case ProgressStatus.inProgress:
+                                isStatus = 'i';
+                                break;
+
+                              case ProgressStatus.locked:
+                                isStatus = 'l';
+                                break;
+                            }
+
+                            return Stack(
+                              children: [
+                                //card
+                                InkWell(
+                                  onTap: () async {
+                                    // jika locked tdk bisa dipencet
+                                    if (status == ProgressStatus.locked) {
+                                      return;
+                                    }
+
+                                    if (widget.mode == HomeMode.admin) {
+                                      context.push(
+                                        LevelSelect(
+                                          mode: HomeMode.admin,
+                                          chapterId: chapter.id!,
+                                          chapterName: "Chapter ${index + 1}",
+                                          chapterTitle: chapter.chapterTitle,
+                                          chapterLongDesc: chapter.longDesc,
+                                        ),
+                                      );
+                                    } else {
+                                      await context.push(
+                                        LevelSelect(
+                                          mode: HomeMode.user,
+                                          chapterId: chapter.id!,
+                                          chapterName: "Chapter ${index + 1}",
+                                          chapterTitle: chapter.chapterTitle,
+                                          chapterLongDesc: chapter.longDesc,
+                                        ),
+                                      );
+                                      setState(() {});
+                                    }
+                                  },
+                                  child: Card(
+                                    color: Colors.white,
+                                    margin: EdgeInsets.zero,
+                                    elevation: isStatus == "l" ? 0 : 2,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      side: BorderSide(
+                                        color: AppColors.borderCream,
+                                      ),
                                     ),
-                                  );
-                                } else {
-                                  await context.push(
-                                    LevelSelect(
-                                      mode: HomeMode.user,
-                                      chapterId: chapter.id!,
-                                      chapterName: "Chapter ${index + 1}",
-                                      chapterTitle: chapter.chapterTitle,
-                                      chapterLongDesc: chapter.longDesc,
-                                    ),
-                                  );
-                                  setState(() {});
-                                }
-                              },
-                              child: Card(
-                                color: Colors.white,
-                                margin: EdgeInsets.zero,
-                                elevation: isStatus == "l" ? 0 : 2,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  side: BorderSide(
-                                    color: AppColors.borderCream,
-                                  ),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      //row status bar dan chapter brp
-                                      Row(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          //chapter brp
-                                          Text(
-                                            "Chapter ${index + 1}",
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                          SizedBox(width: 8),
-
-                                          //status bar
-                                          Container(
-                                            padding: EdgeInsets.symmetric(
-                                              vertical: 2,
-                                              horizontal: 8,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(9999),
-                                              color: isStatus == "c"
-                                                  ? AppColors.statusCompleted
-                                                        .withValues(alpha: 0.3)
-                                                  : isStatus == "i"
-                                                  ? AppColors.statusInProgress
-                                                        .withValues(alpha: 0.3)
-                                                  : AppColors.statusLocked,
-                                            ),
-                                            child: Text(
-                                              isStatus == "c"
-                                                  ? "COMPLETED"
-                                                  : isStatus == "i"
-                                                  ? "IN PROGRESS"
-                                                  : "LOCKED",
-                                              style: TextStyle(
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.bold,
-                                                color: isStatus == "c"
-                                                    ? AppColors.statusCompleted
-                                                    : isStatus == "i"
-                                                    ? AppColors.statusInProgress
-                                                    : AppColors.primaryBlack,
+                                          //row status bar dan chapter brp
+                                          Row(
+                                            children: [
+                                              //chapter brp
+                                              Text(
+                                                "Chapter ${index + 1}",
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w600,
+                                                ),
                                               ),
+                                              SizedBox(width: 8),
+
+                                              //status bar
+                                              Container(
+                                                padding: EdgeInsets.symmetric(
+                                                  vertical: 2,
+                                                  horizontal: 8,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                        9999,
+                                                      ),
+                                                  color: isStatus == "c"
+                                                      ? AppColors
+                                                            .statusCompleted
+                                                            .withValues(
+                                                              alpha: 0.3,
+                                                            )
+                                                      : isStatus == "i"
+                                                      ? AppColors
+                                                            .statusInProgress
+                                                            .withValues(
+                                                              alpha: 0.3,
+                                                            )
+                                                      : AppColors.statusLocked,
+                                                ),
+                                                child: Text(
+                                                  isStatus == "c"
+                                                      ? "COMPLETED"
+                                                      : isStatus == "i"
+                                                      ? "IN PROGRESS"
+                                                      : "LOCKED",
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: isStatus == "c"
+                                                        ? AppColors
+                                                              .statusCompleted
+                                                        : isStatus == "i"
+                                                        ? AppColors
+                                                              .statusInProgress
+                                                        : AppColors
+                                                              .primaryBlack,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(height: 8),
+
+                                          //nama chapter
+                                          Text(
+                                            chapter.chapterTitle,
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
                                             ),
                                           ),
+                                          // SizedBox(height: 6),
+
+                                          //desc chapter
+                                          Text(
+                                            chapter.shortDesc,
+                                            style: TextStyle(fontSize: 14),
+                                          ),
+                                          SizedBox(height: 16),
+
+                                          //row progress dan angka progress
+                                          Row(
+                                            children: [
+                                              Text(
+                                                "Progress",
+                                                style: TextStyle(fontSize: 12),
+                                              ),
+                                              Spacer(),
+                                              Text(
+                                                "${(progress * 100).toInt()}%",
+                                                style: TextStyle(fontSize: 12),
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(height: 4),
+
+                                          //progress bar
+                                          LinearProgressIndicator(
+                                            value: progress,
+                                            minHeight: 12,
+                                            backgroundColor: const Color(
+                                              0xFFF9ECDB,
+                                            ),
+                                            color: isStatus == "c"
+                                                ? AppColors.statusCompleted
+                                                      .withValues(alpha: 0.5)
+                                                : AppColors.statusInProgress
+                                                      .withValues(alpha: 0.5),
+                                            borderRadius: BorderRadius.circular(
+                                              999,
+                                            ),
+                                          ),
+
+                                          //row edit delete utk admin
+                                          if (widget.mode ==
+                                              HomeMode.admin) ...[
+                                            SizedBox(height: 6),
+                                            Row(
+                                              children: [
+                                                ButtonActionAdmin(
+                                                  text: "Edit",
+                                                  bgColor:
+                                                      AppColors.blueComponent,
+                                                  onPressed: () {
+                                                    //blm tersedia
+                                                    ScaffoldMessenger.of(
+                                                      context,
+                                                    ).showSnackBar(
+                                                      const SnackBar(
+                                                        content: Text(
+                                                          "Fitur ini belum tersedia pada MVP",
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
+                                                ),
+                                                SizedBox(width: 5),
+                                                ButtonActionAdmin(
+                                                  text: "Delete",
+                                                  bgColor:
+                                                      AppColors.redComponent,
+                                                  onPressed: () {
+                                                    //blm tersedia
+                                                    ScaffoldMessenger.of(
+                                                      context,
+                                                    ).showSnackBar(
+                                                      const SnackBar(
+                                                        content: Text(
+                                                          "Fitur ini belum tersedia pada MVP",
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
+                                                ),
+                                              ],
+                                            ),
+                                          ], //if
                                         ],
                                       ),
-                                      SizedBox(height: 8),
-
-                                      //nama chapter
-                                      Text(
-                                        chapter.chapterTitle,
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      // SizedBox(height: 6),
-
-                                      //desc chapter
-                                      Text(
-                                        chapter.shortDesc,
-                                        style: TextStyle(fontSize: 14),
-                                      ),
-                                      SizedBox(height: 16),
-
-                                      //row progress dan angka progress
-                                      Row(
-                                        children: [
-                                          Text(
-                                            "Progress",
-                                            style: TextStyle(fontSize: 12),
-                                          ),
-                                          Spacer(),
-                                          Text(
-                                            isStatus == "c"
-                                                ? "100%"
-                                                : isStatus == "i"
-                                                ? "50%"
-                                                : "0%",
-                                            style: TextStyle(fontSize: 12),
-                                          ),
-                                        ],
-                                      ),
-                                      SizedBox(height: 4),
-
-                                      //progress bar
-                                      LinearProgressIndicator(
-                                        value: isStatus == "c"
-                                            ? 1.00
-                                            : isStatus == "i"
-                                            ? 0.50
-                                            : 0.00,
-                                        minHeight: 12,
-                                        backgroundColor: const Color(
-                                          0xFFF9ECDB,
-                                        ),
-                                        color: isStatus == "c"
-                                            ? AppColors.statusCompleted
-                                                  .withValues(alpha: 0.5)
-                                            : AppColors.statusInProgress
-                                                  .withValues(alpha: 0.5),
-                                        borderRadius: BorderRadius.circular(
-                                          999,
-                                        ),
-                                      ),
-
-                                      //row edit delete utk admin
-                                      if (widget.mode == HomeMode.admin) ...[
-                                        SizedBox(height: 6),
-                                        Row(
-                                          children: [
-                                            ButtonActionAdmin(
-                                              text: "Edit",
-                                              bgColor: AppColors.blueComponent,
-                                              onPressed: () {
-                                                //blm tersedia
-                                                ScaffoldMessenger.of(
-                                                  context,
-                                                ).showSnackBar(
-                                                  const SnackBar(
-                                                    content: Text(
-                                                      "Fitur ini belum tersedia pada MVP",
-                                                    ),
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                            SizedBox(width: 5),
-                                            ButtonActionAdmin(
-                                              text: "Delete",
-                                              bgColor: AppColors.redComponent,
-                                              onPressed: () {
-                                                //blm tersedia
-                                                ScaffoldMessenger.of(
-                                                  context,
-                                                ).showSnackBar(
-                                                  const SnackBar(
-                                                    content: Text(
-                                                      "Fitur ini belum tersedia pada MVP",
-                                                    ),
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                      ], //if
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-
-                            //overlay locked
-                            if (isStatus == "l")
-                              Positioned.fill(
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primaryCream.withValues(
-                                      alpha: 0.5,
                                     ),
-                                    borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
-                              ),
-                          ],
+
+                                //overlay locked
+                                if (isStatus == "l")
+                                  Positioned.fill(
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primaryCream
+                                            .withValues(alpha: 0.5),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
                         );
                       },
                       //end card chapter
