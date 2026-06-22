@@ -1,4 +1,4 @@
-package com.example.deebee_user
+package com.ppkd.deebee
 
 import io.flutter.embedding.android.FlutterActivity
 
