@@ -205,8 +205,6 @@ class _GameplayState extends State<Gameplay> {
           onNext: nextScene,
           onRefresh: refreshPage,
         );
-      default:
-        return const SizedBox.shrink();
     }
   }
 }

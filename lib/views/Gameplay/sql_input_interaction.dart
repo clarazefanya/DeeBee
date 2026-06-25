@@ -3,6 +3,7 @@ import 'package:deebee_user/components/components.dart'; // Sesuaikan import kam
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/database/preference_handler.dart';
 import 'package:deebee_user/database/repository/exercise_db_repository.dart';
+import 'package:deebee_user/database/repository/user_scene_progress_repository.dart';
 import 'package:deebee_user/models/scene_model.dart';
 import 'package:deebee_user/services/gameplay_progress_service.dart';
 import 'package:flutter/material.dart';
@@ -158,6 +159,10 @@ class _SqlInputInteractionState extends State<SqlInputInteraction> {
       _targetResult,
     );
 
+    // Var cek apakah scene ini sudah pernah complete
+    final bool alreadyCompleted = await UserSceneProgressRepository()
+        .isSceneCompleted(currentUserId!, widget.scene.id!);
+
     // Jika jawaban benar: simpan progress dan tambah xp, refresh halaman
     if (isCorrect) {
       await saveSceneProgress(userId: currentUserId!, scene: widget.scene);
@@ -171,12 +176,20 @@ class _SqlInputInteractionState extends State<SqlInputInteraction> {
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: isCorrect
+                  ? AppColors.greenComponent
+                  : AppColors.redComponent,
+              width: 3,
+            ),
           ),
           title: Row(
             children: [
               Icon(
                 isCorrect ? Icons.check_circle : Icons.cancel,
-                color: isCorrect ? Colors.green : Colors.red,
+                color: isCorrect
+                    ? AppColors.greenComponent
+                    : AppColors.redComponent,
                 size: 28,
               ),
               const SizedBox(width: 10),
@@ -184,15 +197,22 @@ class _SqlInputInteractionState extends State<SqlInputInteraction> {
                 isCorrect ? 'Query Sukses!' : 'Query Tidak Sesuai',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: isCorrect ? Colors.green : Colors.red,
+                  color: isCorrect
+                      ? AppColors.greenComponent
+                      : AppColors.redComponent,
                 ),
               ),
             ],
           ),
-          content: Text(
-            isCorrect
-                ? 'kamu mendapatkan +${widget.scene.rewardXp} XP.'
-                : 'Meskipun kueri sukses dieksekusi, output data yang dihasilkan tidak sesuai dengan Target Hasil yang diminta. Silakan periksa kembali filter atau kolom kamu!',
+          content: ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 300),
+            child: Text(
+              isCorrect
+                  ? alreadyCompleted
+                        ? 'Selamat, jawabanmu benar.'
+                        : 'Kamu mendapatkan +${widget.scene.rewardXp} XP.'
+                  : 'Meskipun kueri sukses dieksekusi, output data yang dihasilkan tidak sesuai dengan Target Hasil yang diminta. Silakan periksa kembali filter atau kolom kamu!',
+            ),
           ),
           actions: [
             TextButton(

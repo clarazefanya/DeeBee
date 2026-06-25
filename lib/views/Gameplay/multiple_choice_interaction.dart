@@ -1,6 +1,7 @@
 import 'package:deebee_user/components/components.dart'; // Sesuaikan import kamu
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/database/preference_handler.dart';
+import 'package:deebee_user/database/repository/user_scene_progress_repository.dart';
 import 'package:deebee_user/models/scene_model.dart';
 import 'package:deebee_user/services/gameplay_progress_service.dart';
 import 'package:flutter/material.dart';
@@ -33,6 +34,10 @@ class _MultipleChoiceInteractionState extends State<MultipleChoiceInteraction> {
   Future<void> _checkAnswer() async {
     if (_selectedOption == null) return;
 
+    // Var cek apakah scene ini sudah pernah complete
+    final bool alreadyCompleted = await UserSceneProgressRepository()
+        .isSceneCompleted(currentUserId!, widget.scene.id!);
+
     // Ambil kunci jawaban asli dari database (A, B, atau C)
     final String correctKey = widget.scene.answerKeyMultipleChoice ?? '';
     final bool isCorrect = _selectedOption == correctKey;
@@ -51,12 +56,20 @@ class _MultipleChoiceInteractionState extends State<MultipleChoiceInteraction> {
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: isCorrect
+                  ? AppColors.greenComponent
+                  : AppColors.redComponent,
+              width: 3,
+            ),
           ),
           title: Row(
             children: [
               Icon(
                 isCorrect ? Icons.check_circle : Icons.cancel,
-                color: isCorrect ? Colors.green : Colors.red,
+                color: isCorrect
+                    ? AppColors.greenComponent
+                    : AppColors.redComponent,
                 size: 28,
               ),
               const SizedBox(width: 10),
@@ -64,15 +77,22 @@ class _MultipleChoiceInteractionState extends State<MultipleChoiceInteraction> {
                 isCorrect ? 'Jawaban Benar!' : 'Jawaban Salah',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: isCorrect ? Colors.green : Colors.red,
+                  color: isCorrect
+                      ? AppColors.greenComponent
+                      : AppColors.redComponent,
                 ),
               ),
             ],
           ),
-          content: Text(
-            isCorrect
-                ? 'Kamu mendapatkan +${widget.scene.rewardXp} XP.'
-                : 'Yah, jawabanmu kurang tepat. Coba lagi.',
+          content: ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 300),
+            child: Text(
+              isCorrect
+                  ? alreadyCompleted
+                        ? 'Selamat jawabanmu benar.'
+                        : 'Kamu mendapatkan +${widget.scene.rewardXp} XP.'
+                  : 'Yah, jawabanmu kurang tepat. Coba lagi.',
+            ),
           ),
           actions: [
             TextButton(
@@ -84,9 +104,7 @@ class _MultipleChoiceInteractionState extends State<MultipleChoiceInteraction> {
                 }
               },
               child: Text(
-                isCorrect
-                    ? 'Lanjut'
-                    : 'Perbaiki', // Mengubah teks secara dinamis
+                isCorrect ? 'Lanjut' : 'Perbaiki',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),

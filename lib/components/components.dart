@@ -16,7 +16,7 @@ class TextFieldComponent extends StatefulWidget {
     super.key,
     this.icon,
     this.hinttext,
-    this.lines,
+    this.lines = 1,
     this.isPassword = false, //optional hanya utk password
     this.textFieldVal,
     required this.textFieldCont,

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 class AppColors {
   static const Color primaryHoney = Color(0xFFFFB800);
   static const Color primaryBlack = Color(0xFF000000);
-  // static const Color primaryGreyLocked = Color(0xFFE1E3E4);
   static const Color primaryCream = Color(0xFFFFF2E1);
 
   static const Color background = Color(0xFFFFF8F3);
@@ -18,12 +17,11 @@ class AppColors {
   static const Color statusCompleted = Color(0xFF4ADE80);
   static const Color statusCompletedIcon = Color(0xFF15803D);
 
-  static const Color greenComponent = Color(0xFF4ADE80);
-  static const Color redComponent = Color(0xFFF44336);
-  static const Color blueComponent = Color(0xFF00D7FE);
+  // static const Color greenComponent = Color(0xFF4ADE80);
+  // static const Color redComponent = Color(0xFFF44336);
+  // static const Color blueComponent = Color(0xFF00D7FE);
 
-  // static const Color textPrimary = Color(0xFF222222);
-  // static const Color textSecondary = Color(0xFF757575);
-
-  // static const Color border = Color(0xFFE0E0E0);
+  static const Color greenComponent = Color(0xFF66BB6A);
+  static const Color redComponent = Color(0xFFE57373);
+  static const Color blueComponent = Color(0xFF64B5F6);
 }
