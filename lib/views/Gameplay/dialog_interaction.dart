@@ -1,6 +1,7 @@
 import 'package:deebee_user/components/components.dart'; // Sesuaikan import kamu
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/database/preference_handler.dart';
+import 'package:deebee_user/models/enums/home_mode_model.dart';
 import 'package:deebee_user/models/scene_model.dart';
 import 'package:deebee_user/services/gameplay_progress_service.dart';
 import 'package:flutter/material.dart';
@@ -9,12 +10,14 @@ class DialogInteraction extends StatefulWidget {
   final SceneModel scene; // Terima data scene aktif dari parent
   final VoidCallback onNext; // Terima fungsi trigger scene selanjutnya
   final bool isIntro;
+  final HomeMode mode;
 
   const DialogInteraction({
     super.key,
     required this.scene,
     required this.onNext,
     this.isIntro = false,
+    required this.mode,
   });
 
   @override
@@ -53,6 +56,11 @@ class _DialogInteractionState extends State<DialogInteraction> {
           text: "Lanjut",
           bgcolor: AppColors.primaryHoney,
           onPressed: () async {
+            //jika mode admin, tombol tdk berfungsi
+            if (widget.mode == HomeMode.admin) {
+              return;
+            }
+
             await saveSceneProgress(
               userId: currentUserId!,
               scene: widget.scene,

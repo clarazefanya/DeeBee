@@ -2,6 +2,7 @@ import 'package:deebee_user/components/components.dart'; // Sesuaikan import kam
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/database/preference_handler.dart';
 import 'package:deebee_user/database/repository/user_scene_progress_repository.dart';
+import 'package:deebee_user/models/enums/home_mode_model.dart';
 import 'package:deebee_user/models/scene_model.dart';
 import 'package:deebee_user/services/gameplay_progress_service.dart';
 import 'package:flutter/material.dart';
@@ -10,12 +11,14 @@ class MultipleChoiceInteraction extends StatefulWidget {
   final SceneModel scene; // Terima data scene aktif
   final VoidCallback onNext; // Terima fungsi trigger scene selanjutnya
   final VoidCallback onRefresh; // Terima fungsi trigger refresh 1 halaman
+  final HomeMode mode;
 
   const MultipleChoiceInteraction({
     super.key,
     required this.scene,
     required this.onNext,
     required this.onRefresh,
+    required this.mode,
   });
 
   @override
@@ -33,6 +36,11 @@ class _MultipleChoiceInteractionState extends State<MultipleChoiceInteraction> {
   // Fungsi untuk memvalidasi jawaban saat tombol di-klik
   Future<void> _checkAnswer() async {
     if (_selectedOption == null) return;
+
+    //jika mode admin, tombol tdk berfungsi
+    if (widget.mode == HomeMode.admin) {
+      return;
+    }
 
     // Var cek apakah scene ini sudah pernah complete
     final bool alreadyCompleted = await UserSceneProgressRepository()

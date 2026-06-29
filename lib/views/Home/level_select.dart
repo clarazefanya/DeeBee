@@ -211,6 +211,7 @@ class _LevelSelectState extends State<LevelSelect> {
                                     namaLevel: "Intro",
                                     levelId: intro.id!,
                                     levelNote: intro.note,
+                                    mode: widget.mode,
                                   ),
                                 );
                               } else {
@@ -237,6 +238,7 @@ class _LevelSelectState extends State<LevelSelect> {
                                     levelId: intro.id!,
                                     scenes: scenes,
                                     isIntro: true,
+                                    mode: widget.mode,
                                   ),
                                 );
                               }
@@ -330,6 +332,7 @@ class _LevelSelectState extends State<LevelSelect> {
                                                             "Level ${index + 1}",
                                                         levelId: level.id!,
                                                         levelNote: level.note,
+                                                        mode: widget.mode,
                                                       ),
                                                     );
                                                   } else {
@@ -360,6 +363,7 @@ class _LevelSelectState extends State<LevelSelect> {
                                                             "Level ${index + 1}",
                                                         levelId: level.id!,
                                                         scenes: scenes,
+                                                        mode: widget.mode,
                                                       ),
                                                     );
                                                     setState(() {});

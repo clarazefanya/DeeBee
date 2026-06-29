@@ -4,6 +4,7 @@ import 'package:deebee_user/database/repository/asset_scene_repository.dart';
 import 'package:deebee_user/extension/navigator.dart';
 import 'package:deebee_user/models/asset_scene_model.dart';
 import 'package:deebee_user/models/enums/gameplay_enum_model.dart';
+import 'package:deebee_user/models/enums/home_mode_model.dart';
 import 'package:deebee_user/models/scene_model.dart';
 import 'package:deebee_user/views/Gameplay/dialog_interaction.dart';
 import 'package:deebee_user/views/Gameplay/multiple_choice_interaction.dart';
@@ -18,6 +19,7 @@ class Gameplay extends StatefulWidget {
     required this.levelId,
     required this.scenes,
     this.isIntro = false,
+    required this.mode,
   });
 
   // final GameplayType gameplayType;
@@ -25,6 +27,7 @@ class Gameplay extends StatefulWidget {
   final int levelId;
   final List<SceneModel> scenes;
   final bool isIntro;
+  final HomeMode mode;
 
   @override
   State<Gameplay> createState() => _GameplayState();
@@ -67,10 +70,24 @@ class _GameplayState extends State<Gameplay> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('Halaman Selesai!'),
-        content: const Text(
-          'Selamat! Kamu telah menyelesaikan seluruh scene di level ini.',
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: AppColors.primaryHoney, width: 3),
         ),
+        title: Row(
+          children: [
+            Icon(Icons.emoji_events, color: AppColors.primaryHoney, size: 28),
+            const SizedBox(width: 10),
+            const Text(
+              'Level Selesai!',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: AppColors.primaryHoney,
+              ),
+            ),
+          ],
+        ),
+        content: const Text('Selamat! Kamu telah menyelesaikan level ini.'),
         actions: [
           TextButton(
             onPressed: () {
@@ -93,7 +110,15 @@ class _GameplayState extends State<Gameplay> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: DeebeeAppbar(leading: IconAppbarGameplay()),
+      appBar: widget.mode == HomeMode.admin
+          ? AppBar(
+              title: Text(
+                "Preview Scene",
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              backgroundColor: AppColors.background,
+            )
+          : DeebeeAppbar(leading: IconAppbarGameplay()),
       body: _currentGameplayType == GameplayType.sqlInput
           ? _buildSqlLayout()
           : _buildNormalLayout(),
@@ -185,6 +210,7 @@ class _GameplayState extends State<Gameplay> {
           onNext: nextScene,
           // Melempar flag isIntro
           isIntro: widget.isIntro,
+          mode: widget.mode,
         );
       case GameplayType.multipleChoice:
         return MultipleChoiceInteraction(
@@ -192,18 +218,21 @@ class _GameplayState extends State<Gameplay> {
           onNext: nextScene,
           //untuk trigger refresh 1 hlmn gameplay
           onRefresh: refreshPage,
+          mode: widget.mode,
         );
       case GameplayType.wordArrangement:
         return WordArrangementInteraction(
           scene: _currentScene,
           onNext: nextScene,
           onRefresh: refreshPage,
+          mode: widget.mode,
         );
       case GameplayType.sqlInput:
         return SqlInputInteraction(
           scene: _currentScene,
           onNext: nextScene,
           onRefresh: refreshPage,
+          mode: widget.mode,
         );
     }
   }

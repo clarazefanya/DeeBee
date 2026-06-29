@@ -3,8 +3,10 @@ import 'package:deebee_user/components/components_admin.dart';
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/database/repository/scene_repository.dart';
 import 'package:deebee_user/extension/navigator.dart';
+import 'package:deebee_user/models/enums/home_mode_model.dart';
 import 'package:deebee_user/models/scene_model.dart';
 import 'package:deebee_user/views/admin/scene_form.dart';
+import 'package:deebee_user/views/gameplay/gameplay_scene.dart';
 import 'package:flutter/material.dart';
 
 class SceneList extends StatefulWidget {
@@ -12,6 +14,7 @@ class SceneList extends StatefulWidget {
   final int levelId;
   final String? levelNote;
   final bool isIntro;
+  final HomeMode mode;
 
   const SceneList({
     super.key,
@@ -19,6 +22,7 @@ class SceneList extends StatefulWidget {
     required this.levelId,
     this.levelNote,
     this.isIntro = false,
+    required this.mode,
   });
 
   @override
@@ -247,7 +251,22 @@ class _SceneListState extends State<SceneList> {
                                       ),
                                     ],
                                   ),
-                                  onTap: () {},
+                                  onTap: () async {
+                                    final scenes = await SceneRepository()
+                                        .getSceneById(currentScene.id!);
+
+                                    context.push(
+                                      Gameplay(
+                                        namaLevel: widget.isIntro
+                                            ? "Intro"
+                                            : "Level ${index + 1}",
+                                        levelId: widget.levelId,
+                                        scenes: [scenes!],
+                                        isIntro: widget.isIntro,
+                                        mode: widget.mode,
+                                      ),
+                                    );
+                                  },
                                 ),
                               );
                             },
