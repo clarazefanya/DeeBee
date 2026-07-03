@@ -228,15 +228,43 @@ class _AssetSceneListState extends State<AssetSceneList> {
                 Navigator.pop(dialogContext); // Tutup dialog dulu
 
                 // Jalankan fungsi delete
-                await AssetSceneRepository().deleteAssetScene(imageId);
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Gambar berhasil dihapus")),
-                );
+                try {
+                  //jika berhasil
+                  await AssetSceneRepository().deleteAssetScene(imageId);
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Gambar berhasil dihapus")),
+                  );
 
-                setState(() {
-                  loadAssets();
-                });
+                  setState(() {
+                    loadAssets();
+                  });
+                } catch (e) {
+                  //jika gagal
+                  if (!context.mounted) return;
+                  showDialog(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      title: const Text(
+                        "Gagal Menghapus Gambar",
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      content: const Text(
+                        "Gambar ini sedang digunakan oleh satu atau lebih scene. "
+                        "Lepaskan gambar dari scene terkait terlebih dahulu sebelum menghapusnya.",
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text("OK"),
+                        ),
+                      ],
+                    ),
+                  );
+                }
               },
               style: TextButton.styleFrom(foregroundColor: Colors.red),
               child: const Text("Ya, Hapus"),
@@ -307,7 +335,7 @@ class _AssetSceneListState extends State<AssetSceneList> {
                   },
                 ),
               ),
-              const SizedBox(height: 70),
+              const SizedBox(height: 50),
             ],
           ),
         );

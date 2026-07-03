@@ -1,5 +1,4 @@
 import 'package:deebee_user/database/db_tables.dart';
-import 'package:flutter/services.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -21,10 +20,14 @@ class DBHelper {
   Future<Database> _initDB() async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'deebee.db');
-
     return openDatabase(
       path,
       version: 1,
+
+      onConfigure: (db) async {
+        await db.execute('PRAGMA foreign_keys = ON');
+      },
+
       onCreate: (db, version) async {
         // 1. Eksekusi pembuatan tabel
         await db.execute(DBTables.createUsersTable);
@@ -36,99 +39,49 @@ class DBHelper {
         await db.execute(DBTables.createScenesProgressTable);
 
         // 2. Eksekusi insert data demo/dummy
-        for (String query in DBTables.dummyDataQueries) {
+        // users
+        for (final query in DBTables.dummyUserQueries) {
           await db.execute(query);
         }
+        // assetscene
+        await DBDummy.insertDummyAssetScene(db);
+        // content
+        for (final query in DBTables.dummyGameContentQueries) {
+          await db.execute(query);
+        }
+      },
 
-        // 3. Data dummy assetscene
-        await _insertDummyAssetScene(db);
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          // Hapus seluruh tabel selain users
+          await db.execute('DROP TABLE IF EXISTS user_scene_progress');
+          await db.execute('DROP TABLE IF EXISTS scenes');
+          await db.execute('DROP TABLE IF EXISTS levels');
+          await db.execute('DROP TABLE IF EXISTS chapters');
+          await db.execute('DROP TABLE IF EXISTS modules');
+          await db.execute('DROP TABLE IF EXISTS asset_scene');
+          // Reset progress user
+          await db.execute('''
+            UPDATE users
+            SET
+            last_level_id = NULL,
+            last_scene_id = NULL,
+            xp = 0;
+          ''');
+          // Buat ulang tabel
+          await db.execute(DBTables.createAssetSceneTable);
+          await db.execute(DBTables.createModulesTable);
+          await db.execute(DBTables.createChaptersTable);
+          await db.execute(DBTables.createLevelsTable);
+          await db.execute(DBTables.createScenesTable);
+          await db.execute(DBTables.createScenesProgressTable);
+          // insert ulang konten permainan
+          await DBDummy.insertDummyAssetScene(db);
+          for (final query in DBTables.dummyGameContentQueries) {
+            await db.execute(query);
+          }
+        }
       },
     );
-  }
-
-  // DUMMY DATA ASSET SCENE
-  Future<void> _insertDummyAssetScene(Database db) async {
-    final bg1 = await rootBundle.load(
-      'assets/images/demo/Background-kasir.jpg',
-    );
-    final bg2 = await rootBundle.load(
-      'assets/images/demo/Background-lorong.jpg',
-    );
-    final charAdi1 = await rootBundle.load('assets/images/demo/Adi-idle.png');
-    final charAdi2 = await rootBundle.load('assets/images/demo/Adi-intro.png');
-    final charAdi3 = await rootBundle.load('assets/images/demo/Adi-smile.png');
-    final charAdi4 = await rootBundle.load('assets/images/demo/Adi-speak.png');
-    final charBian1 = await rootBundle.load(
-      'assets/images/demo/Bian-intro.png',
-    );
-    final charBian2 = await rootBundle.load(
-      'assets/images/demo/Bian-smile.png',
-    );
-    final charBian3 = await rootBundle.load(
-      'assets/images/demo/Bian-smile-2.png',
-    );
-    final charBian4 = await rootBundle.load(
-      'assets/images/demo/Bian-speak.png',
-    );
-
-    await db.insert('asset_scene', {
-      'image_name': 'Background-kasir.jpg',
-      'image': bg1.buffer.asUint8List(),
-      'category': 'Background',
-    });
-
-    await db.insert('asset_scene', {
-      'image_name': 'Background-lorong.jpg',
-      'image': bg2.buffer.asUint8List(),
-      'category': 'Background',
-    });
-
-    await db.insert('asset_scene', {
-      'image_name': 'Adi-idle.png',
-      'image': charAdi1.buffer.asUint8List(),
-      'category': 'Karakter',
-    });
-
-    await db.insert('asset_scene', {
-      'image_name': 'Adi-intro.png',
-      'image': charAdi2.buffer.asUint8List(),
-      'category': 'Karakter',
-    });
-
-    await db.insert('asset_scene', {
-      'image_name': 'Adi-smile.png',
-      'image': charAdi3.buffer.asUint8List(),
-      'category': 'Karakter',
-    });
-
-    await db.insert('asset_scene', {
-      'image_name': 'Adi-speak.png',
-      'image': charAdi4.buffer.asUint8List(),
-      'category': 'Karakter',
-    });
-
-    await db.insert('asset_scene', {
-      'image_name': 'Bian-intro.png',
-      'image': charBian1.buffer.asUint8List(),
-      'category': 'Karakter',
-    });
-
-    await db.insert('asset_scene', {
-      'image_name': 'Bian-smile.png',
-      'image': charBian2.buffer.asUint8List(),
-      'category': 'Karakter',
-    });
-
-    await db.insert('asset_scene', {
-      'image_name': 'Bian-smile-2.png',
-      'image': charBian3.buffer.asUint8List(),
-      'category': 'Karakter',
-    });
-
-    await db.insert('asset_scene', {
-      'image_name': 'Bian-speak.png',
-      'image': charBian4.buffer.asUint8List(),
-      'category': 'Karakter',
-    });
   }
 }

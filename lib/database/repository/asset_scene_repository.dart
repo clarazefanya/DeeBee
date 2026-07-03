@@ -1,5 +1,6 @@
 import 'package:deebee_user/database/db_helper.dart';
 import 'package:deebee_user/models/asset_scene_model.dart';
+import 'package:sqflite/sqflite.dart';
 
 class AssetSceneRepository {
   // Panggil instance DBHelper
@@ -33,9 +34,16 @@ class AssetSceneRepository {
 
   // Delete Image (DELETE)
   Future<int> deleteAssetScene(int id) async {
-    final db = await _dbHelper.database;
+    final db = await DBHelper().database;
 
-    return await db.delete('asset_scene', where: 'id = ?', whereArgs: [id]);
+    try {
+      return await db.delete('asset_scene', where: 'id = ?', whereArgs: [id]);
+    } on DatabaseException catch (e) {
+      if (e.toString().contains('FOREIGN KEY constraint failed')) {
+        throw Exception('Asset sedang digunakan oleh scene.');
+      }
+      rethrow;
+    }
   }
 
   // Read image berdasarkan id (READ)

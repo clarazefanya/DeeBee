@@ -31,14 +31,35 @@ class _ChapterSelectState extends State<ChapterSelect> {
   //future di chapter
   late Future<List<ChapterModel>> _chaptersFuture;
 
+  //repo & controller
+  final _chapterRepo = ChapterRepository();
+  final _titleController = TextEditingController();
+  final _shortDescController = TextEditingController();
+  final _longDescController = TextEditingController();
+
   //Ambil userID n role dari SharedPreferences
   final int? currentUserId = PreferenceHandler.userId;
   final String? currentRole = PreferenceHandler.role;
 
+  //refresh
+  void _refreshChapters() {
+    setState(() {
+      _chaptersFuture = _chapterRepo.getChaptersByModule(widget.moduleId);
+    });
+  }
+
   @override
   void initState() {
     super.initState();
-    _chaptersFuture = ChapterRepository().getChaptersByModule(widget.moduleId);
+    _refreshChapters();
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _shortDescController.dispose();
+    _longDescController.dispose();
+    super.dispose();
   }
 
   // helper get chapter status n progress
@@ -101,12 +122,7 @@ class _ChapterSelectState extends State<ChapterSelect> {
                   ButtonCreateAdmin(
                     text: "Buat Chapter Baru",
                     onPressed: () {
-                      //blm tersedia
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Fitur ini belum tersedia pada MVP"),
-                        ),
-                      );
+                      _showChapterBottomSheet();
                     },
                   ),
                   SizedBox(height: 24),
@@ -335,15 +351,8 @@ class _ChapterSelectState extends State<ChapterSelect> {
                                                   bgColor:
                                                       AppColors.blueComponent,
                                                   onPressed: () {
-                                                    //blm tersedia
-                                                    ScaffoldMessenger.of(
-                                                      context,
-                                                    ).showSnackBar(
-                                                      const SnackBar(
-                                                        content: Text(
-                                                          "Fitur ini belum tersedia pada MVP",
-                                                        ),
-                                                      ),
+                                                    _showChapterBottomSheet(
+                                                      chapter: chapter,
                                                     );
                                                   },
                                                 ),
@@ -352,18 +361,10 @@ class _ChapterSelectState extends State<ChapterSelect> {
                                                   text: "Delete",
                                                   bgColor:
                                                       AppColors.redComponent,
-                                                  onPressed: () {
-                                                    //blm tersedia
-                                                    ScaffoldMessenger.of(
-                                                      context,
-                                                    ).showSnackBar(
-                                                      const SnackBar(
-                                                        content: Text(
-                                                          "Fitur ini belum tersedia pada MVP",
-                                                        ),
+                                                  onPressed: () =>
+                                                      _deleteChapter(
+                                                        chapter.id!,
                                                       ),
-                                                    );
-                                                  },
                                                 ),
                                               ],
                                             ),
@@ -396,6 +397,160 @@ class _ChapterSelectState extends State<ChapterSelect> {
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  //function local utk create/edit chapter
+  Future<void> _showChapterBottomSheet({ChapterModel? chapter}) async {
+    _titleController.text = chapter?.chapterTitle ?? '';
+    _shortDescController.text = chapter?.shortDesc ?? '';
+    _longDescController.text = chapter?.longDesc ?? '';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 20,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  chapter == null ? "Buat Chapter Baru" : "Edit Chapter",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Judul Chapter
+                const Text(
+                  "Judul Chapter",
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                TextFieldComponent(
+                  hinttext: "Masukkan judul chapter",
+                  textFieldCont: _titleController,
+                ),
+                const SizedBox(height: 16),
+
+                // Deskripsi Singkat
+                const Text(
+                  "Deskripsi Singkat",
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                TextFieldComponent(
+                  hinttext: "Masukkan deskripsi singkat",
+                  lines: 2,
+                  textFieldCont: _shortDescController,
+                ),
+                const SizedBox(height: 16),
+
+                // Deskripsi Lengkap
+                const Text(
+                  "Deskripsi Lengkap",
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                TextFieldComponent(
+                  hinttext: "Masukkan deskripsi lengkap",
+                  lines: 6,
+                  textFieldCont: _longDescController,
+                ),
+                const SizedBox(height: 24),
+
+                ButtonComponent(
+                  text: "Simpan",
+                  bgcolor: AppColors.primaryHoney,
+                  onPressed: () async {
+                    if (chapter == null) {
+                      //create
+                      await _chapterRepo.createChapter(
+                        chapterTitle: _titleController.text.trim(),
+                        shortDesc: _shortDescController.text.trim(),
+                        longDesc: _longDescController.text.trim(),
+                        moduleId: widget.moduleId,
+                      );
+                    } else {
+                      //edit
+                      await _chapterRepo.updateChapter(
+                        chapterId: chapter.id!,
+                        chapterTitle: _titleController.text.trim(),
+                        shortDesc: _shortDescController.text.trim(),
+                        longDesc: _longDescController.text.trim(),
+                      );
+                    }
+                    context.pop();
+                    _refreshChapters();
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          chapter == null
+                              ? "Chapter berhasil dibuat"
+                              : "Chapter berhasil diperbarui",
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 50),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  //function local utk delete chapter
+  Future<void> _deleteChapter(int chapterId) async {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Hapus Chapter'),
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Yakin ingin menghapus chapter ini?'),
+            const Text(
+              'Semua level dan scene di dalam chapter ini juga akan ikut dihapus.',
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => context.pop(),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () async {
+              context.pop();
+
+              await _chapterRepo.deleteChapter(chapterId);
+
+              _refreshChapters();
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Chapter berhasil dihapus')),
+              );
+            },
+            child: const Text('Hapus', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),

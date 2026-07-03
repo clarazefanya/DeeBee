@@ -1,3 +1,6 @@
+import 'package:flutter/services.dart';
+import 'package:sqflite/sqflite.dart';
+
 class DBTables {
   // Tabel users
   static const String createUsersTable = '''
@@ -44,7 +47,7 @@ class DBTables {
     short_desc TEXT NOT NULL,
     long_desc TEXT NOT NULL,
     module_id INTEGER NOT NULL,
-    FOREIGN KEY(module_id) REFERENCES modules(id)
+    FOREIGN KEY(module_id) REFERENCES modules(id) ON DELETE CASCADE
   );
   ''';
 
@@ -55,7 +58,7 @@ class DBTables {
     level_type TEXT NOT NULL,
     note TEXT,
     chapter_id INTEGER NOT NULL,
-    FOREIGN KEY(chapter_id) REFERENCES chapters(id)
+    FOREIGN KEY(chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
   );
   ''';
 
@@ -77,9 +80,9 @@ class DBTables {
     answer_key_multiple_choice TEXT NULL,
     answer_key TEXT NULL,
     reward_xp INTEGER NOT NULL DEFAULT 0,
-    FOREIGN KEY(level_id) REFERENCES levels(id),
-    FOREIGN KEY(bg_image_id) REFERENCES asset_scene(id),
-    FOREIGN KEY(char_image_id) REFERENCES asset_scene(id)
+    FOREIGN KEY(level_id) REFERENCES levels(id) ON DELETE CASCADE,
+    FOREIGN KEY(bg_image_id) REFERENCES asset_scene(id) ON DELETE RESTRICT,
+    FOREIGN KEY(char_image_id) REFERENCES asset_scene(id) ON DELETE RESTRICT 
   );
   ''';
 
@@ -100,8 +103,8 @@ class DBTables {
 
   // TODO: Tambah query CREATE TABLE lainnya di sini nanti
 
-  // Query untuk insert data contoh/demo
-  static const List<String> dummyDataQueries = [
+  // Query untuk insert data users admin & contoh/demo
+  static const List<String> dummyUserQueries = [
     // Data Admin
     '''
     INSERT INTO users (name, email, password, avatar_index, role, is_active, created_at, last_level_id, xp)
@@ -125,7 +128,10 @@ class DBTables {
     INSERT INTO users (name, email, password, avatar_index, role, is_active, created_at, last_level_id, xp)
     VALUES ('Ani Mahalini', 'ani@gmail.com', '12345678', 0, 'user', 1, '2026-06-13 10:30:00', NULL, 0);
     ''',
+  ];
 
+  // Query untuk insert data contoh/demo
+  static const List<String> dummyGameContentQueries = [
     // Data modul
     '''
     INSERT INTO modules (module_name, description, is_published)
@@ -366,4 +372,92 @@ class DBTables {
     );
     ''',
   ];
+}
+
+// DUMMY DATA ASSET SCENE
+class DBDummy {
+  static Future<void> insertDummyAssetScene(Database db) async {
+    final bg1 = await rootBundle.load(
+      'assets/images/demo/Background-kasir.jpg',
+    );
+    final bg2 = await rootBundle.load(
+      'assets/images/demo/Background-lorong.jpg',
+    );
+    final charAdi1 = await rootBundle.load('assets/images/demo/Adi-idle.png');
+    final charAdi2 = await rootBundle.load('assets/images/demo/Adi-intro.png');
+    final charAdi3 = await rootBundle.load('assets/images/demo/Adi-smile.png');
+    final charAdi4 = await rootBundle.load('assets/images/demo/Adi-speak.png');
+    final charBian1 = await rootBundle.load(
+      'assets/images/demo/Bian-intro.png',
+    );
+    final charBian2 = await rootBundle.load(
+      'assets/images/demo/Bian-smile.png',
+    );
+    final charBian3 = await rootBundle.load(
+      'assets/images/demo/Bian-smile-2.png',
+    );
+    final charBian4 = await rootBundle.load(
+      'assets/images/demo/Bian-speak.png',
+    );
+
+    await db.insert('asset_scene', {
+      'image_name': 'Background-kasir.jpg',
+      'image': bg1.buffer.asUint8List(),
+      'category': 'Background',
+    });
+
+    await db.insert('asset_scene', {
+      'image_name': 'Background-lorong.jpg',
+      'image': bg2.buffer.asUint8List(),
+      'category': 'Background',
+    });
+
+    await db.insert('asset_scene', {
+      'image_name': 'Adi-idle.png',
+      'image': charAdi1.buffer.asUint8List(),
+      'category': 'Karakter',
+    });
+
+    await db.insert('asset_scene', {
+      'image_name': 'Adi-intro.png',
+      'image': charAdi2.buffer.asUint8List(),
+      'category': 'Karakter',
+    });
+
+    await db.insert('asset_scene', {
+      'image_name': 'Adi-smile.png',
+      'image': charAdi3.buffer.asUint8List(),
+      'category': 'Karakter',
+    });
+
+    await db.insert('asset_scene', {
+      'image_name': 'Adi-speak.png',
+      'image': charAdi4.buffer.asUint8List(),
+      'category': 'Karakter',
+    });
+
+    await db.insert('asset_scene', {
+      'image_name': 'Bian-intro.png',
+      'image': charBian1.buffer.asUint8List(),
+      'category': 'Karakter',
+    });
+
+    await db.insert('asset_scene', {
+      'image_name': 'Bian-smile.png',
+      'image': charBian2.buffer.asUint8List(),
+      'category': 'Karakter',
+    });
+
+    await db.insert('asset_scene', {
+      'image_name': 'Bian-smile-2.png',
+      'image': charBian3.buffer.asUint8List(),
+      'category': 'Karakter',
+    });
+
+    await db.insert('asset_scene', {
+      'image_name': 'Bian-speak.png',
+      'image': charBian4.buffer.asUint8List(),
+      'category': 'Karakter',
+    });
+  }
 }

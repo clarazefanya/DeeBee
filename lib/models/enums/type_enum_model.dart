@@ -1,3 +1,4 @@
+//enum gameplayType (tabel scenes)
 enum GameplayType {
   dialog,
   multipleChoice,
@@ -18,4 +19,13 @@ enum GameplayType {
         return GameplayType.dialog;
     }
   }
+}
+
+//enum kolom level_type (tabel levels)
+enum LevelType {
+  intro('intro'),
+  gameplay('gameplay');
+
+  final String value;
+  const LevelType(this.value);
 }

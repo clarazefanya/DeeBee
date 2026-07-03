@@ -7,6 +7,7 @@ import 'package:deebee_user/database/repository/scene_repository.dart';
 import 'package:deebee_user/extension/navigator.dart';
 import 'package:deebee_user/models/enums/home_mode_model.dart';
 import 'package:deebee_user/models/enums/progress_status.dart';
+import 'package:deebee_user/models/enums/type_enum_model.dart';
 import 'package:deebee_user/models/level_model.dart';
 import 'package:deebee_user/services/progress_service.dart';
 import 'package:deebee_user/views/admin/scene_list.dart';
@@ -67,7 +68,7 @@ class _LevelSelectState extends State<LevelSelect> {
                   children: [
                     GestureDetector(
                       onTap: () {
-                        context.pop(true);
+                        context.pop();
                       },
                       child: Padding(
                         padding: const EdgeInsets.only(top: 6),
@@ -206,7 +207,7 @@ class _LevelSelectState extends State<LevelSelect> {
                             onTap: () async {
                               if (widget.mode == HomeMode.admin) {
                                 //jika mode admin, ke halaman scene list
-                                context.push(
+                                await context.push(
                                   SceneList(
                                     namaLevel: "Intro",
                                     levelId: intro.id!,
@@ -214,6 +215,7 @@ class _LevelSelectState extends State<LevelSelect> {
                                     mode: widget.mode,
                                   ),
                                 );
+                                _refreshLevels();
                               } else {
                                 //selain mode admin, ke halaman gameplay
                                 //Ambil data scene untuk level intro dari database
@@ -232,7 +234,7 @@ class _LevelSelectState extends State<LevelSelect> {
                                   return;
                                 }
                                 // Arahkan ke halaman Gameplay dengan membawa list scenes
-                                context.push(
+                                await context.push(
                                   Gameplay(
                                     namaLevel: "Intro",
                                     levelId: intro.id!,
@@ -241,6 +243,7 @@ class _LevelSelectState extends State<LevelSelect> {
                                     mode: widget.mode,
                                   ),
                                 );
+                                setState(() {});
                               }
                             },
                           ),
@@ -271,7 +274,7 @@ class _LevelSelectState extends State<LevelSelect> {
                             //button create level utk admin di slot terakhir
                             if (widget.mode == HomeMode.admin &&
                                 index == gameplayLevels.length) {
-                              return CreateLevelCard();
+                              return CreateLevelCard(onTap: _createLevel);
                             }
 
                             final level = gameplayLevels[index];
@@ -326,7 +329,7 @@ class _LevelSelectState extends State<LevelSelect> {
                                                   if (widget.mode ==
                                                       HomeMode.admin) {
                                                     //jika mode admin, ke halaman scene list
-                                                    context.push(
+                                                    await context.push(
                                                       SceneList(
                                                         namaLevel:
                                                             "Level ${index + 1}",
@@ -335,6 +338,7 @@ class _LevelSelectState extends State<LevelSelect> {
                                                         mode: widget.mode,
                                                       ),
                                                     );
+                                                    _refreshLevels();
                                                   } else {
                                                     //selain mode admin, ke halaman gameplay scene
                                                     //Ambil data scene untuk level gameplay ini
@@ -419,18 +423,10 @@ class _LevelSelectState extends State<LevelSelect> {
                                                         icon: Icons.delete,
                                                         color: AppColors
                                                             .redComponent,
-                                                        onTap: () {
-                                                          //blm tersedia
-                                                          ScaffoldMessenger.of(
-                                                            context,
-                                                          ).showSnackBar(
-                                                            const SnackBar(
-                                                              content: Text(
-                                                                "Fitur ini belum tersedia pada MVP",
-                                                              ),
+                                                        onTap: () =>
+                                                            _deleteLevel(
+                                                              level.id!,
                                                             ),
-                                                          );
-                                                        },
                                                       ),
                                                     ],
                                                   ),
@@ -475,21 +471,72 @@ class _LevelSelectState extends State<LevelSelect> {
       ),
     );
   }
+
+  //function local utk refresh data
+  void _refreshLevels() {
+    setState(() {
+      _levelsFuture = LevelRepository().getLevelsByChapter(widget.chapterId);
+    });
+  }
+
+  //function local utk create level
+  Future<void> _createLevel() async {
+    await LevelRepository().createLevel(
+      chapterId: widget.chapterId,
+      levelType: LevelType.gameplay,
+    );
+    _refreshLevels();
+  }
+
+  //function local utk delete level
+  Future<void> _deleteLevel(int levelId) async {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Hapus Level'),
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Yakin ingin menghapus level ini?'),
+            const Text(
+              'Semua scene pada level ini juga akan ikut dihapus.',
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => context.pop(),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () async {
+              context.pop();
+              await LevelRepository().deleteLevel(levelId);
+              _refreshLevels();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Level berhasil dihapus')),
+              );
+            },
+            child: const Text('Hapus', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 ///function button create level
 class CreateLevelCard extends StatelessWidget {
-  const CreateLevelCard({super.key});
+  const CreateLevelCard({super.key, required this.onTap});
+
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {
-        //blm tersedia
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Fitur ini belum tersedia pada MVP")),
-        );
-      },
+      onTap: onTap,
       child: Column(
         children: [
           Expanded(

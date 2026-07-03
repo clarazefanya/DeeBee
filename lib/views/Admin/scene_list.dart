@@ -1,6 +1,7 @@
 import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/components/components_admin.dart';
 import 'package:deebee_user/constants/colors.dart';
+import 'package:deebee_user/database/repository/level_repository.dart';
 import 'package:deebee_user/database/repository/scene_repository.dart';
 import 'package:deebee_user/extension/navigator.dart';
 import 'package:deebee_user/models/enums/home_mode_model.dart';
@@ -36,17 +37,29 @@ class _SceneListState extends State<SceneList> {
   // Variabel untuk menampung fungsi Future agar tidak ter-trigger ulang saat build dikerjakan
   late Future<List<SceneModel>> _scenesFuture;
 
-  @override
-  void initState() {
-    super.initState();
-    refreshScenes();
-  }
+  // Variabel utk note admin
+  final _levelRepo = LevelRepository();
+  late String? _levelNote;
+  final TextEditingController _noteController = TextEditingController();
 
   // Fungsi untuk memicu pengambilan/pembaruan data dari database (refresh data)
   void refreshScenes() {
     setState(() {
       _scenesFuture = _sceneRepo.getScenesByLevel(widget.levelId);
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _levelNote = widget.levelNote;
+    refreshScenes();
+  }
+
+  @override
+  void dispose() {
+    _noteController.dispose();
+    super.dispose();
   }
 
   @override
@@ -65,7 +78,7 @@ class _SceneListState extends State<SceneList> {
               children: [
                 GestureDetector(
                   onTap: () {
-                    context.pop();
+                    context.pop(true);
                   },
                   child: const Padding(
                     padding: EdgeInsets.only(top: 6),
@@ -100,23 +113,16 @@ class _SceneListState extends State<SceneList> {
                 ActionCircleAdmin(
                   icon: Icons.edit,
                   color: AppColors.blueComponent,
-                  onTap: () {
-                    //blm tersedia
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Fitur ini belum tersedia pada MVP"),
-                      ),
-                    );
-                  },
+                  onTap: _editNote,
                 ),
               ],
             ),
-            if (widget.levelNote?.isNotEmpty ?? false)
+            if (_levelNote?.isNotEmpty ?? false)
               Container(
                 constraints: const BoxConstraints(maxHeight: 60),
                 child: SingleChildScrollView(
                   child: Text(
-                    '${widget.levelNote}',
+                    _levelNote!,
                     style: const TextStyle(fontSize: 12),
                   ),
                 ),
@@ -283,6 +289,63 @@ class _SceneListState extends State<SceneList> {
     );
   }
 
+  // Fungsi edit catatan admin
+  Future<void> _editNote() async {
+    _noteController.text = _levelNote ?? '';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Catatan Admin",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              const SizedBox(height: 16),
+
+              TextFieldComponent(
+                hinttext: "Catatan Admin",
+                lines: 5,
+                textFieldCont: _noteController,
+              ),
+              const SizedBox(height: 20),
+
+              ButtonComponent(
+                text: "Simpan",
+                bgcolor: AppColors.primaryHoney,
+                onPressed: () async {
+                  await _levelRepo.updateLevelNote(
+                    levelId: widget.levelId,
+                    note: _noteController.text.trim(),
+                  );
+                  setState(() {
+                    _levelNote = _noteController.text.trim();
+                  });
+                  context.pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Catatan berhasil disimpan")),
+                  );
+                },
+              ),
+              const SizedBox(height: 50),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   // Dialog konfirmasi delete data
   void _showDeleteDialog(int? sceneId) {
     if (sceneId == null) return;
@@ -290,11 +353,11 @@ class _SceneListState extends State<SceneList> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Hapus Scene'),
-        content: const Text('Apakah Anda yakin ingin menghapus scene ini?'),
+        content: const Text('Yakin ingin menghapus scene ini?'),
         actions: [
           TextButton(
             onPressed: () => context.pop(),
-            child: const Text('Tidak'),
+            child: const Text('Batal'),
           ),
           TextButton(
             onPressed: () async {
@@ -306,7 +369,7 @@ class _SceneListState extends State<SceneList> {
                 const SnackBar(content: Text('Scene berhasil dihapus')),
               );
             },
-            child: const Text('Ya, Hapus', style: TextStyle(color: Colors.red)),
+            child: const Text('Hapus', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
