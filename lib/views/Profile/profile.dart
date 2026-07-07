@@ -1,11 +1,12 @@
 import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/database/preference_handler.dart';
-import 'package:deebee_user/database/repository/user_repository.dart';
+import 'package:deebee_user/database/repository/firebase/user_repository_firebase.dart';
 import 'package:deebee_user/extension/navigator.dart';
-import 'package:deebee_user/models/user_model.dart';
+import 'package:deebee_user/models/user_model_firebase.dart';
 import 'package:deebee_user/views/auth/login.dart';
 import 'package:deebee_user/views/profile/about_us.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -20,18 +21,18 @@ class Profile extends StatefulWidget {
 class _ProfileState extends State<Profile> {
   @override
   Widget build(BuildContext context) {
-    //Ambil userId dari SharedPreferences
-    final int? currentUserId = PreferenceHandler.userId;
+    //Ambil UID
+    final String? currentUserUid = FirebaseAuth.instance.currentUser?.uid;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: DeebeeAppbar(),
 
       //listview dibungkus FutureBuilder
-      body: FutureBuilder<UserModel?>(
+      body: FutureBuilder<UserModelFirebase?>(
         // Panggil fungsi getUserById
-        future: currentUserId != null
-            ? UserRepository().getUserById(currentUserId)
+        future: currentUserUid != null
+            ? UserRepositoryFirebase().getUserByUid(currentUserUid)
             : Future.value(null),
         builder: (context, snapshot) {
           //Kondisi Loading
@@ -197,9 +198,7 @@ class _ProfileState extends State<Profile> {
                                         DateFormat(
                                           'dd MMMM yyyy',
                                           'id_ID',
-                                        ).format(
-                                          DateTime.parse(user.createdAt),
-                                        ),
+                                        ).format(user.createdAt),
                                       ),
                                     ],
                                   ),
@@ -606,8 +605,8 @@ class _ProfileState extends State<Profile> {
                                       return;
                                     }
 
-                                    if (currentUserId != null) {
-                                      confirmDeleteAccount(currentUserId);
+                                    if (currentUserUid != null) {
+                                      confirmDeleteAccount(currentUserUid);
                                     }
                                   },
                                 ),
@@ -650,6 +649,7 @@ class _ProfileState extends State<Profile> {
                           ),
                           onPressed: () async {
                             //logic logout
+                            await FirebaseAuth.instance.signOut();
                             await PreferenceHandler.logOut();
                             if (!context.mounted) return;
                             context.pushAndRemoveAll(Login());
@@ -684,7 +684,7 @@ class _ProfileState extends State<Profile> {
   }
 
   //function tombol hapus akun
-  void confirmDeleteAccount(int userId) {
+  void confirmDeleteAccount(String uid) {
     //tampilkan dialog konfirmasi
     showDialog(
       context: context,
@@ -706,7 +706,7 @@ class _ProfileState extends State<Profile> {
                 Navigator.pop(dialogContext); // Tutup dialog dulu
 
                 // Jalankan fungsi delete
-                await UserRepository().deleteUser(userId);
+                // await UserRepository().deleteUser(userId);
                 await PreferenceHandler.logOut();
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(

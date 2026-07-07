@@ -9,6 +9,7 @@ class PreferenceHandler {
   // Keys
   static const _keyIsLogin = "isLogin";
   static const _keyUserId = "userId";
+  static const _keyUserUid = "userUid";
   static const _keyRole = "role";
   static const _keyAvatarIndex = "avatarIndex";
 
@@ -24,7 +25,7 @@ class PreferenceHandler {
     return _prefs.getBool(_keyIsLogin) ?? false;
   }
 
-  // =================== USER ID ===================
+  // =================== USER ID (SQLite - sementara, akan dihapus setelah migrasi selesai) ===================
   //set ID User setelah sukses login
   static Future<void> setUserId(int userId) async {
     await _prefs.setInt(_keyUserId, userId);
@@ -33,6 +34,17 @@ class PreferenceHandler {
   //ambil ID User untuk kebutuhan query/fitur game (bisa null kalau belum login)
   static int? get userId {
     return _prefs.getInt(_keyUserId);
+  }
+
+  // =================== USER UID (Firebase) ===================
+  //set ID User setelah sukses login (FIREBASE)
+  static Future<void> setUserUid(String userUid) async {
+    await _prefs.setString(_keyUserUid, userUid);
+  }
+
+  //ambil ID User untuk kebutuhan query/fitur game (FIREBASE)
+  static String? get userUid {
+    return _prefs.getString(_keyUserUid);
   }
 
   // =================== USER ROLE ===================
@@ -60,6 +72,7 @@ class PreferenceHandler {
   static Future<void> logOut() async {
     await _prefs.remove(_keyIsLogin);
     await _prefs.remove(_keyUserId);
+    await _prefs.remove(_keyUserUid);
     await _prefs.remove(_keyRole);
     await _prefs.remove(_keyAvatarIndex);
 

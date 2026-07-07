@@ -1,9 +1,12 @@
 import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/constants/colors.dart';
-import 'package:deebee_user/database/repository/user_repository.dart';
+import 'package:deebee_user/database/repository/firebase/user_repository_firebase.dart';
 import 'package:deebee_user/extension/navigator.dart';
-import 'package:deebee_user/models/user_model.dart';
+import 'package:deebee_user/models/user_model_firebase.dart';
+import 'package:deebee_user/services/auth_service.dart';
+import 'package:deebee_user/utils/firebase_error_helper.dart';
 import 'package:deebee_user/views/auth/login.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class Register extends StatefulWidget {
@@ -29,6 +32,12 @@ class _RegisterState extends State<Register> {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmpasswordController =
       TextEditingController();
+
+  //panggil AuthService & UserRepositoryFirebase
+  final AuthService _authService = AuthService();
+  final UserRepositoryFirebase _userRepositoryFirebase =
+      UserRepositoryFirebase();
+  bool isLoading = false; //loading button
 
   @override
   Widget build(BuildContext context) {
@@ -222,6 +231,7 @@ class _RegisterState extends State<Register> {
                     ButtonComponent(
                       text: "Daftar",
                       bgcolor: AppColors.primaryHoney,
+                      isLoading: isLoading,
                       onPressed: register, //panggil function button register
                     ),
                     SizedBox(height: 16),
@@ -270,43 +280,63 @@ class _RegisterState extends State<Register> {
       return;
     }
 
-    // Dapatkan waktu lokal saat ini
-    String currentTime = DateTime.now().toLocal().toIso8601String();
+    // Button menampilkan loading
+    setState(() {
+      isLoading = true;
+    });
 
-    // Buat model user
-    final user = UserModel(
-      name: nameController.text.trim(),
-      email: emailController.text.trim(),
-      password: passwordController.text,
-      avatarIndex: selectedAvatar,
-      role: 'user', // role saat register pasti "user"
-      isActive: true,
-      createdAt: currentTime,
-      xp: 0,
-    );
+    try {
+      // Panggil user credential dari AuthService
+      final credential = await _authService.register(
+        email: emailController.text.trim(),
+        password: passwordController.text,
+      );
+      // Ambil UID dari credential
+      final uid = credential.user!.uid;
 
-    // Panggil fungsi registerUser di UserRepository, create
-    bool success = await UserRepository().registerUser(user);
-    print("sukses: $success");
+      // Buat UserModelFirebase
+      final user = UserModelFirebase(
+        uid: uid,
+        name: nameController.text.trim(),
+        email: emailController.text.trim(),
+        avatarIndex: selectedAvatar,
+        role: 'user',
+        isActive: true,
+        createdAt: DateTime.now(),
+        lastLevelId: null,
+        lastSceneId: null,
+        xp: 0,
+      );
 
-    // Cek apakah widget masih terpasang (mounted) sebelum menggunakan context
-    if (!mounted) return;
+      // Simpan ke Firestore
+      await _userRepositoryFirebase.createUser(user);
 
-    // Cek hasil register
-    if (success) {
-      // Create berhasil
-      print("berhasil");
+      // Cek apakah widget masih terpasang (mounted) sebelum menggunakan context
+      if (!mounted) return;
+
+      // Register berhasil, push ke hlmn login
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Register berhasil")));
       context.push(Login());
-    } else {
-      // Create gagal
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Email sudah terdaftar atau terjadi kesalahan"),
-        ),
-      );
+    } on FirebaseAuthException catch (e) {
+      // REGISTER GAGAL (error dari Firebase Auth)
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(firebaseAuthErrorMessage(e))));
+    } catch (e) {
+      // REGISTER GAGAL (untuk error lain)
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Terjadi kesalahan: $e')));
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 }

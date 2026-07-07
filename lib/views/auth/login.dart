@@ -1,10 +1,13 @@
 import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/database/preference_handler.dart';
-import 'package:deebee_user/database/repository/user_repository.dart';
+import 'package:deebee_user/database/repository/firebase/user_repository_firebase.dart';
 import 'package:deebee_user/extension/navigator.dart';
+import 'package:deebee_user/services/auth_service.dart';
+import 'package:deebee_user/utils/firebase_error_helper.dart';
 import 'package:deebee_user/views/auth/register.dart';
 import 'package:deebee_user/views/navigation/bottom_navbar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class Login extends StatefulWidget {
@@ -19,6 +22,12 @@ class _LoginState extends State<Login> {
   final _loginFormKey = GlobalKey<FormState>();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
+  //panggil AuthService & UserRepositoryFirebase
+  final AuthService _authService = AuthService();
+  final UserRepositoryFirebase _userRepositoryFirebase =
+      UserRepositoryFirebase();
+  bool isLoading = false; //loading button
 
   @override
   Widget build(BuildContext context) {
@@ -126,6 +135,7 @@ class _LoginState extends State<Login> {
                     ButtonComponent(
                       text: "Masuk",
                       bgcolor: AppColors.primaryHoney,
+                      isLoading: isLoading,
                       onPressed: login,
                     ),
                     SizedBox(height: 16),
@@ -174,44 +184,73 @@ class _LoginState extends State<Login> {
       return;
     }
 
-    //Panggil loginUser() di UserRepository, read
-    final pengguna = await UserRepository().loginUser(
-      emailController.text.trim(),
-      passwordController.text,
-    );
+    // Button menampilkan loading
+    setState(() {
+      isLoading = true;
+    });
 
-    //Cek apakah widget masih terpasang (mounted) sebelum menggunakan context
-    if (!mounted) return;
+    try {
+      // Login ke Firebase Auth
+      final credential = await _authService.login(
+        email: emailController.text.trim(),
+        password: passwordController.text,
+      );
 
-    //Cek hasil login
-    if (pengguna != null) {
-      //cek apakah user sedang di-banned
+      // Ambil UID
+      final uid = credential.user!.uid;
+
+      // Get user by id dari firestore
+      final pengguna = await _userRepositoryFirebase.getUserByUid(uid);
+
+      if (!mounted) return;
+
+      // Kalau data user tidak ditemukan di Firestore
+      if (pengguna == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Data pengguna tidak ditemukan")),
+        );
+        return;
+      }
+
+      // Cek apakah user dibanned
       if (!pengguna.isActive) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Akun Anda telah dinonaktifkan.'),
+            content: Text("Akun Anda telah dinonaktifkan."),
             backgroundColor: Colors.red,
           ),
         );
-        return; //tidak bisa login
+        return;
       }
 
       // LOGIN BERHASIL & USER AKTIF
       //simpan data ke preferences
-      await PreferenceHandler.setLogin(true); //login true
-      await PreferenceHandler.setUserId(pengguna.id!); //simpan ID
-      await PreferenceHandler.setRole(pengguna.role); //simpan role
-      await PreferenceHandler.setAvatarIndex(
-        pengguna.avatarIndex,
-      ); //simpan avatar
+      await PreferenceHandler.setLogin(true);
+      await PreferenceHandler.setUserId(2);
+      await PreferenceHandler.setUserUid(uid);
+      await PreferenceHandler.setRole(pengguna.role);
+      await PreferenceHandler.setAvatarIndex(pengguna.avatarIndex);
 
       if (!mounted) return;
       context.pushReplacement(BottomNavBar());
-    } else {
-      // LOGIN GAGAL (Email atau password salah)
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email atau password salah')),
-      );
+    } on FirebaseAuthException catch (e) {
+      // LOGIN GAGAL (error dari Firebase Auth)
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(firebaseAuthErrorMessage(e))));
+    } catch (e) {
+      // LOGIN GAGAL (untuk error lain)
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Terjadi kesalahan: $e")));
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 }
