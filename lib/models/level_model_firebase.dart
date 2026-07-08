@@ -7,6 +7,9 @@ class LevelModelFirebase {
   @JsonKey(defaultValue: '')
   final String id;
 
+  @JsonKey(defaultValue: 0)
+  final int order;
+
   @JsonKey(defaultValue: '')
   final String levelType;
 
@@ -18,6 +21,7 @@ class LevelModelFirebase {
 
   LevelModelFirebase({
     required this.id,
+    required this.order,
     required this.levelType,
     this.note,
     required this.chapterId,

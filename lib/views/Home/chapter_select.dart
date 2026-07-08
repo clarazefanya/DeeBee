@@ -2,9 +2,9 @@ import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/components/components_admin.dart';
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/database/preference_handler.dart';
-import 'package:deebee_user/database/repository/chapter_repository.dart';
+import 'package:deebee_user/database/repository/firebase/chapter_repository_firebase.dart';
 import 'package:deebee_user/extension/navigator.dart';
-import 'package:deebee_user/models/chapter_model.dart';
+import 'package:deebee_user/models/chapter_model_firebase.dart';
 import 'package:deebee_user/models/enums/home_mode_model.dart';
 import 'package:deebee_user/models/enums/progress_status.dart';
 import 'package:deebee_user/services/progress_service.dart';
@@ -20,7 +20,7 @@ class ChapterSelect extends StatefulWidget {
   });
 
   final HomeMode mode;
-  final int moduleId;
+  final String moduleId;
   final String moduleName;
 
   @override
@@ -28,30 +28,19 @@ class ChapterSelect extends StatefulWidget {
 }
 
 class _ChapterSelectState extends State<ChapterSelect> {
-  //future di chapter
-  late Future<List<ChapterModel>> _chaptersFuture;
-
   //repo & controller
-  final _chapterRepo = ChapterRepository();
+  final _chapterRepo = ChapterRepositoryFirebase();
   final _titleController = TextEditingController();
   final _shortDescController = TextEditingController();
   final _longDescController = TextEditingController();
 
-  //Ambil userID n role dari SharedPreferences
-  final int? currentUserId = PreferenceHandler.userId;
+  //Ambil userUid n role dari SharedPreferences
+  final String? currentUserUid = PreferenceHandler.userUid;
   final String? currentRole = PreferenceHandler.role;
-
-  //refresh
-  void _refreshChapters() {
-    setState(() {
-      _chaptersFuture = _chapterRepo.getChaptersByModule(widget.moduleId);
-    });
-  }
 
   @override
   void initState() {
     super.initState();
-    _refreshChapters();
   }
 
   @override
@@ -63,16 +52,16 @@ class _ChapterSelectState extends State<ChapterSelect> {
   }
 
   // helper get chapter status n progress
-  Future<Map<String, dynamic>> _getChapterData(int chapterId) async {
+  Future<Map<String, dynamic>> _getChapterData(String chapterId) async {
     final progressService = ProgressService();
 
     final status = await progressService.getChapterStatus(
-      currentUserId!,
+      PreferenceHandler.userUid!,
       chapterId,
     );
 
     final progress = await progressService.getChapterProgress(
-      currentUserId!,
+      PreferenceHandler.userUid!,
       chapterId,
     );
 
@@ -128,8 +117,8 @@ class _ChapterSelectState extends State<ChapterSelect> {
                   SizedBox(height: 24),
                 ],
 
-                FutureBuilder<List<ChapterModel>>(
-                  future: _chaptersFuture,
+                StreamBuilder<List<ChapterModelFirebase>>(
+                  stream: _chapterRepo.streamChapterByModule(widget.moduleId),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
                       return const Center(child: CircularProgressIndicator());
@@ -152,7 +141,7 @@ class _ChapterSelectState extends State<ChapterSelect> {
                         final chapter = chapters[index];
 
                         return FutureBuilder<Map<String, dynamic>>(
-                          future: _getChapterData(chapter.id!),
+                          future: _getChapterData(chapter.id),
                           builder: (context, snapshot) {
                             if (!snapshot.hasData) {
                               return const SizedBox.shrink();
@@ -194,7 +183,7 @@ class _ChapterSelectState extends State<ChapterSelect> {
                                       context.push(
                                         LevelSelect(
                                           mode: HomeMode.admin,
-                                          chapterId: chapter.id!,
+                                          chapterId: chapter.id,
                                           chapterName: "Chapter ${index + 1}",
                                           chapterTitle: chapter.chapterTitle,
                                           chapterLongDesc: chapter.longDesc,
@@ -204,7 +193,7 @@ class _ChapterSelectState extends State<ChapterSelect> {
                                       await context.push(
                                         LevelSelect(
                                           mode: HomeMode.user,
-                                          chapterId: chapter.id!,
+                                          chapterId: chapter.id,
                                           chapterName: "Chapter ${index + 1}",
                                           chapterTitle: chapter.chapterTitle,
                                           chapterLongDesc: chapter.longDesc,
@@ -363,7 +352,7 @@ class _ChapterSelectState extends State<ChapterSelect> {
                                                       AppColors.redComponent,
                                                   onPressed: () =>
                                                       _deleteChapter(
-                                                        chapter.id!,
+                                                        chapter.id,
                                                       ),
                                                 ),
                                               ],
@@ -404,7 +393,7 @@ class _ChapterSelectState extends State<ChapterSelect> {
   }
 
   //function local utk create/edit chapter
-  Future<void> _showChapterBottomSheet({ChapterModel? chapter}) async {
+  Future<void> _showChapterBottomSheet({ChapterModelFirebase? chapter}) async {
     _titleController.text = chapter?.chapterTitle ?? '';
     _shortDescController.text = chapter?.shortDesc ?? '';
     _longDescController.text = chapter?.longDesc ?? '';
@@ -487,14 +476,13 @@ class _ChapterSelectState extends State<ChapterSelect> {
                     } else {
                       //edit
                       await _chapterRepo.updateChapter(
-                        chapterId: chapter.id!,
+                        chapterId: chapter.id,
                         chapterTitle: _titleController.text.trim(),
                         shortDesc: _shortDescController.text.trim(),
                         longDesc: _longDescController.text.trim(),
                       );
                     }
                     context.pop();
-                    _refreshChapters();
 
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -517,7 +505,7 @@ class _ChapterSelectState extends State<ChapterSelect> {
   }
 
   //function local utk delete chapter
-  Future<void> _deleteChapter(int chapterId) async {
+  Future<void> _deleteChapter(String chapterId) async {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -540,13 +528,13 @@ class _ChapterSelectState extends State<ChapterSelect> {
           ),
           TextButton(
             onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
+
               context.pop();
+              await _chapterRepo.deleteChapterCascade(chapterId);
+              if (!mounted) return;
 
-              await _chapterRepo.deleteChapter(chapterId);
-
-              _refreshChapters();
-
-              ScaffoldMessenger.of(context).showSnackBar(
+              messenger.showSnackBar(
                 const SnackBar(content: Text('Chapter berhasil dihapus')),
               );
             },

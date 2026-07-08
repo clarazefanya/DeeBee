@@ -12,6 +12,10 @@ String firebaseAuthErrorMessage(FirebaseAuthException e) {
     case 'email-already-in-use':
       return 'Email sudah terdaftar.';
 
+    // HAPUS AKUN
+    case 'requires-recent-login':
+      return 'Silakan login kembali sebelum menghapus akun.';
+
     // UMUM
     case 'invalid-email':
       return 'Format email tidak valid.';

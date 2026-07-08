@@ -11,7 +11,7 @@ AssetSceneModelFirebase _$AssetSceneModelFirebaseFromJson(
 ) => AssetSceneModelFirebase(
   id: json['id'] as String? ?? '',
   imageName: json['imageName'] as String? ?? '',
-  imageUrl: json['imageUrl'] as String? ?? '',
+  imageBase64: json['imageBase64'] as String? ?? '',
   category: json['category'] as String? ?? '',
 );
 
@@ -20,6 +20,6 @@ Map<String, dynamic> _$AssetSceneModelFirebaseToJson(
 ) => <String, dynamic>{
   'id': instance.id,
   'imageName': instance.imageName,
-  'imageUrl': instance.imageUrl,
+  'imageBase64': instance.imageBase64,
   'category': instance.category,
 };

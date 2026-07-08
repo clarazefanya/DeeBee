@@ -1,3 +1,4 @@
+import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/database/preference_handler.dart';
 import 'package:deebee_user/database/repository/firebase/user_repository_firebase.dart';
 import 'package:deebee_user/extension/navigator.dart';
@@ -5,6 +6,7 @@ import 'package:deebee_user/views/auth/login.dart';
 import 'package:deebee_user/views/navigation/bottom_navbar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -44,7 +46,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
     // Simpan lagi ke SharedPreferences (cache)
     await PreferenceHandler.setUserUid(currentUser.uid);
-    await PreferenceHandler.setUserId(2);
+    // await PreferenceHandler.setUserId(2);
     await PreferenceHandler.setRole(pengguna.role);
     await PreferenceHandler.setAvatarIndex(pengguna.avatarIndex);
 
@@ -61,6 +63,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -80,10 +83,14 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
             SizedBox(height: 10),
 
-            Text("Loading..."),
+            Text("Loading...", style: TextStyle(color: Colors.grey)),
             SizedBox(height: 10),
 
-            CircularProgressIndicator(),
+            // progress indicator pakai SPIN KIT
+            const SpinKitThreeBounce(
+              color: AppColors.primaryHoney,
+              size: 30.0, // Ukuran bulatan titiknya
+            ),
           ],
         ),
       ),

@@ -75,8 +75,5 @@ class PreferenceHandler {
     await _prefs.remove(_keyUserUid);
     await _prefs.remove(_keyRole);
     await _prefs.remove(_keyAvatarIndex);
-
-    // Atau kalau mau hapus bersih semuanya sekaligus, bisa pakai:
-    // await _prefs.clear();
   }
 }

@@ -226,7 +226,7 @@ class _LoginState extends State<Login> {
       // LOGIN BERHASIL & USER AKTIF
       //simpan data ke preferences
       await PreferenceHandler.setLogin(true);
-      await PreferenceHandler.setUserId(2);
+      // await PreferenceHandler.setUserId(2);
       await PreferenceHandler.setUserUid(uid);
       await PreferenceHandler.setRole(pengguna.role);
       await PreferenceHandler.setAvatarIndex(pengguna.avatarIndex);

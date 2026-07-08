@@ -15,8 +15,8 @@ UserModelFirebase _$UserModelFirebaseFromJson(Map<String, dynamic> json) =>
       role: json['role'] as String? ?? '',
       isActive: json['isActive'] as bool? ?? true,
       createdAt: dateTimeFromJson(json['createdAt']),
-      lastLevelId: (json['lastLevelId'] as num?)?.toInt(),
-      lastSceneId: (json['lastSceneId'] as num?)?.toInt(),
+      lastLevelId: json['lastLevelId'] as String?,
+      lastSceneId: json['lastSceneId'] as String?,
       xp: (json['xp'] as num?)?.toInt() ?? 0,
     );
 

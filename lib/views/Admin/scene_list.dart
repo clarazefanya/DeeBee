@@ -1,18 +1,18 @@
 import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/components/components_admin.dart';
 import 'package:deebee_user/constants/colors.dart';
-import 'package:deebee_user/database/repository/level_repository.dart';
-import 'package:deebee_user/database/repository/scene_repository.dart';
+import 'package:deebee_user/database/repository/firebase/level_repository_firebase.dart';
+import 'package:deebee_user/database/repository/firebase/scene_repository_firebase.dart';
 import 'package:deebee_user/extension/navigator.dart';
 import 'package:deebee_user/models/enums/home_mode_model.dart';
-import 'package:deebee_user/models/scene_model.dart';
+import 'package:deebee_user/models/scene_model_firebase.dart';
 import 'package:deebee_user/views/admin/scene_form.dart';
 import 'package:deebee_user/views/gameplay/gameplay_scene.dart';
 import 'package:flutter/material.dart';
 
 class SceneList extends StatefulWidget {
   final String namaLevel;
-  final int levelId;
+  final String levelId;
   final String? levelNote;
   final bool isIntro;
   final HomeMode mode;
@@ -32,13 +32,13 @@ class SceneList extends StatefulWidget {
 
 class _SceneListState extends State<SceneList> {
   // Inisialisasi class SceneRepository() tempat fungsi getScenesByLevel berada
-  final _sceneRepo = SceneRepository();
+  final _sceneRepo = SceneRepositoryFirebase();
 
   // Variabel untuk menampung fungsi Future agar tidak ter-trigger ulang saat build dikerjakan
-  late Future<List<SceneModel>> _scenesFuture;
+  late Future<List<SceneModelFirebase>> _scenesFuture;
 
   // Variabel utk note admin
-  final _levelRepo = LevelRepository();
+  final _levelRepo = LevelRepositoryFirebase();
   late String? _levelNote;
   final TextEditingController _noteController = TextEditingController();
 
@@ -130,7 +130,7 @@ class _SceneListState extends State<SceneList> {
             const SizedBox(height: 10),
 
             // FutureBuilder diletakkan sebelum pembentukan tombol agar total panjang data (sceneLength) diketahui secara real-time
-            FutureBuilder<List<SceneModel>>(
+            FutureBuilder<List<SceneModelFirebase>>(
               future: _scenesFuture,
               builder: (context, snapshot) {
                 // 1. Kondisi Loading data database
@@ -258,8 +258,9 @@ class _SceneListState extends State<SceneList> {
                                     ],
                                   ),
                                   onTap: () async {
-                                    final scenes = await SceneRepository()
-                                        .getSceneById(currentScene.id!);
+                                    final scene = await _sceneRepo.getSceneById(
+                                      currentScene.id,
+                                    );
 
                                     context.push(
                                       Gameplay(
@@ -267,7 +268,7 @@ class _SceneListState extends State<SceneList> {
                                             ? "Intro"
                                             : "Level ${index + 1}",
                                         levelId: widget.levelId,
-                                        scenes: [scenes!],
+                                        scenes: [scene!],
                                         isIntro: widget.isIntro,
                                         mode: widget.mode,
                                       ),
@@ -347,8 +348,7 @@ class _SceneListState extends State<SceneList> {
   }
 
   // Dialog konfirmasi delete data
-  void _showDeleteDialog(int? sceneId) {
-    if (sceneId == null) return;
+  void _showDeleteDialog(String sceneId) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

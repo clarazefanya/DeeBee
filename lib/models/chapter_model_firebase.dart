@@ -7,6 +7,9 @@ class ChapterModelFirebase {
   @JsonKey(defaultValue: '')
   final String id;
 
+  @JsonKey(defaultValue: 0)
+  final int order;
+
   @JsonKey(defaultValue: '')
   final String chapterTitle;
 
@@ -21,6 +24,7 @@ class ChapterModelFirebase {
 
   ChapterModelFirebase({
     required this.id,
+    required this.order,
     required this.chapterTitle,
     required this.shortDesc,
     required this.longDesc,

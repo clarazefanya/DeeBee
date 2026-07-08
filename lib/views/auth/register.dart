@@ -7,7 +7,9 @@ import 'package:deebee_user/services/auth_service.dart';
 import 'package:deebee_user/utils/firebase_error_helper.dart';
 import 'package:deebee_user/views/auth/login.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Register extends StatefulWidget {
   const Register({super.key});
@@ -45,7 +47,7 @@ class _RegisterState extends State<Register> {
       backgroundColor: AppColors.background,
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 48),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 80),
           child: Column(
             children: [
               //logo
@@ -224,6 +226,46 @@ class _RegisterState extends State<Register> {
                           ),
                         );
                       },
+                    ),
+
+                    // Kebijakan Privasi
+                    RichText(
+                      textAlign: TextAlign.center,
+                      text: TextSpan(
+                        text:
+                            "Dengan mendaftar, Anda menyatakan telah membaca dan menyetujui ",
+                        style: TextStyle(
+                          color: AppColors.borderBrown,
+                          fontSize: 14,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: "Kebijakan Privasi",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              // Kamu bisa ganti warnanya agar terlihat seperti link
+                              color: const Color(0xFF7C5800),
+                              decoration: TextDecoration.underline,
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () async {
+                                final Uri url = Uri.parse(
+                                  'https://docs.google.com/document/d/1iE6dI2ksaWk0coA4-IUwf_khOwlzPzWP9d0cQaK1VHw/edit?usp=sharing',
+                                );
+                                if (!await launchUrl(url)) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Gagal membuka link kebijakan privasi',
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                          ),
+                          TextSpan(text: " kami."),
+                        ],
+                      ),
                     ),
                     SizedBox(height: 16),
 

@@ -27,10 +27,10 @@ class UserModelFirebase {
   final DateTime createdAt;
 
   @JsonKey(defaultValue: null)
-  final int? lastLevelId;
+  final String? lastLevelId;
 
   @JsonKey(defaultValue: null)
-  final int? lastSceneId;
+  final String? lastSceneId;
 
   @JsonKey(defaultValue: 0)
   final int xp;

@@ -10,6 +10,7 @@ ChapterModelFirebase _$ChapterModelFirebaseFromJson(
   Map<String, dynamic> json,
 ) => ChapterModelFirebase(
   id: json['id'] as String? ?? '',
+  order: (json['order'] as num?)?.toInt() ?? 0,
   chapterTitle: json['chapterTitle'] as String? ?? '',
   shortDesc: json['shortDesc'] as String? ?? '',
   longDesc: json['longDesc'] as String? ?? '',
@@ -20,6 +21,7 @@ Map<String, dynamic> _$ChapterModelFirebaseToJson(
   ChapterModelFirebase instance,
 ) => <String, dynamic>{
   'id': instance.id,
+  'order': instance.order,
   'chapterTitle': instance.chapterTitle,
   'shortDesc': instance.shortDesc,
   'longDesc': instance.longDesc,

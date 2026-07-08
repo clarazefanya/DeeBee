@@ -1,16 +1,16 @@
 import 'dart:async';
 
+import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/components/components_admin.dart';
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/database/preference_handler.dart';
-import 'package:deebee_user/database/repository/module_repository.dart';
+import 'package:deebee_user/database/repository/firebase/module_repository_firebase.dart';
 import 'package:deebee_user/extension/navigator.dart';
 import 'package:deebee_user/models/enums/home_mode_model.dart';
-import 'package:deebee_user/models/enums/progress_status.dart';
-import 'package:deebee_user/models/module_model.dart';
+import 'package:deebee_user/models/module_model_firebase.dart';
 import 'package:deebee_user/services/progress_service.dart';
 import 'package:deebee_user/views/home/banner_carousel.dart';
-import 'package:deebee_user/views/home/chapter_select.dart';
+import 'package:deebee_user/views/home/module_list.dart';
 import 'package:flutter/material.dart';
 
 class HomeContent extends StatefulWidget {
@@ -24,32 +24,14 @@ class HomeContent extends StatefulWidget {
 }
 
 class _HomeContentState extends State<HomeContent> {
-  //test var admin
-  bool isPublished = false;
-
-  //Ambil userId n role dari SharedPreferences
-  final int? currentUserId = PreferenceHandler.userId;
+  //Ambil userUid n role dari SharedPreferences
+  final String? currentUserUid = PreferenceHandler.userUid;
   final String? currentRole = PreferenceHandler.role;
 
-  // helper get modul status n progress
-  Future<Map<String, dynamic>> _getModuleData(int moduleId) async {
-    final progressService = ProgressService();
-
-    final status = await progressService.getModuleStatus(
-      currentUserId!,
-      moduleId,
-    );
-
-    final progress = await progressService.getModuleProgress(
-      currentUserId!,
-      moduleId,
-    );
-
-    return {'status': status, 'progress': progress};
-  }
-
-  //Future untuk modul
-  late Future<List<ModuleModel>> _modulesFuture;
+  //panggil repo, textfield controller
+  final _moduleRepo = ModuleRepositoryFirebase();
+  final _moduleNameController = TextEditingController();
+  final _descriptionController = TextEditingController();
 
   //variable dots carousel
   final PageController pageControl = PageController();
@@ -77,9 +59,6 @@ class _HomeContentState extends State<HomeContent> {
         curve: Curves.easeInOut,
       );
     });
-
-    //refresh modul
-    _modulesFuture = ModuleRepository().getModules();
   }
 
   @override
@@ -87,6 +66,8 @@ class _HomeContentState extends State<HomeContent> {
     timer?.cancel();
     pageControl.dispose();
     super.dispose();
+    _moduleNameController.dispose();
+    _descriptionController.dispose();
   }
 
   @override
@@ -136,7 +117,7 @@ class _HomeContentState extends State<HomeContent> {
               // PROGRESS BAR PERJALANAN BELAJARMU
               //future builder
               FutureBuilder<double>(
-                future: ProgressService().getOverallProgress(currentUserId!),
+                future: ProgressService().getOverallProgress(currentUserUid!),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());
@@ -222,299 +203,116 @@ class _HomeContentState extends State<HomeContent> {
                 ButtonCreateAdmin(
                   text: "Buat Modul Baru",
                   onPressed: () {
-                    //blm tersedia
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Fitur ini belum tersedia pada MVP"),
-                      ),
-                    );
+                    _showModuleBottomSheet();
                   },
                 ),
                 SizedBox(height: 12),
               ], //...[ ] artinya memasukkan beberapa widget sekaligus ke dalam list children.
-
-              FutureBuilder<List<ModuleModel>>(
-                future: _modulesFuture,
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  final modules = snapshot.data!;
-                  if (modules.isEmpty) {
-                    return const Center(child: Text("Belum ada modul"));
-                  }
-
-                  return ListView.separated(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    itemCount: modules.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: 12),
-                    itemBuilder: (BuildContext context, int index) {
-                      //start card module
-                      // var ambil data kolom modules
-                      final module = modules[index];
-
-                      // status card
-                      return FutureBuilder<Map<String, dynamic>>(
-                        future: _getModuleData(module.id!),
-                        builder: (context, snapshot) {
-                          if (!snapshot.hasData) {
-                            return const SizedBox.shrink();
-                          }
-
-                          final status =
-                              snapshot.data!['status'] as ProgressStatus;
-
-                          final progress = snapshot.data!['progress'] as double;
-
-                          String isStatus;
-
-                          switch (status) {
-                            case ProgressStatus.completed:
-                              isStatus = 'c';
-                              break;
-
-                            case ProgressStatus.inProgress:
-                              isStatus = 'i';
-                              break;
-
-                            case ProgressStatus.locked:
-                              isStatus = 'l';
-                              break;
-                          }
-
-                          return Stack(
-                            children: [
-                              //card
-                              InkWell(
-                                onTap: () async {
-                                  // jika locked tdk bisa dipencet
-                                  if (status == ProgressStatus.locked) {
-                                    return;
-                                  }
-
-                                  if (widget.mode == HomeMode.admin) {
-                                    context.push(
-                                      ChapterSelect(
-                                        mode: HomeMode.admin,
-                                        moduleId: module.id!,
-                                        moduleName: module.moduleName,
-                                      ),
-                                    );
-                                  } else {
-                                    await context.push(
-                                      ChapterSelect(
-                                        mode: HomeMode.user,
-                                        moduleId: module.id!,
-                                        moduleName: module.moduleName,
-                                      ),
-                                    );
-                                    setState(() {});
-                                    widget.onRefresh?.call();
-                                  }
-                                },
-                                child: Card(
-                                  color: Colors.white,
-                                  margin: EdgeInsets.zero,
-                                  elevation: isStatus == "l" ? 0 : 2,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    side: BorderSide(
-                                      color: AppColors.borderCream,
-                                    ),
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16),
-                                    child: Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        //icon box
-                                        Container(
-                                          padding: const EdgeInsets.all(12),
-                                          decoration: BoxDecoration(
-                                            color: isStatus == "c"
-                                                ? AppColors.statusCompleted
-                                                : isStatus == "i"
-                                                ? AppColors.statusInProgress
-                                                : AppColors.statusLocked,
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                          child: Icon(
-                                            isStatus == "c"
-                                                ? Icons.check_circle_outline
-                                                : isStatus == "i"
-                                                ? Icons.play_arrow
-                                                : Icons.lock_outline,
-                                            color: isStatus == "c"
-                                                ? AppColors.statusCompletedIcon
-                                                : AppColors.primaryBlack,
-                                          ),
-                                        ),
-                                        SizedBox(width: 16),
-
-                                        //right side
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              //title
-                                              Text(
-                                                module.moduleName,
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 16,
-                                                ),
-                                              ),
-                                              SizedBox(height: 6),
-
-                                              //desc
-                                              Text(module.description),
-                                              SizedBox(height: 12),
-
-                                              //progress bar
-                                              Row(
-                                                children: [
-                                                  Expanded(
-                                                    child: LinearProgressIndicator(
-                                                      value: progress,
-                                                      minHeight: 12,
-                                                      backgroundColor:
-                                                          const Color(
-                                                            0xFFF9ECDB,
-                                                          ),
-                                                      color: isStatus == "c"
-                                                          ? AppColors
-                                                                .statusCompleted
-                                                                .withValues(
-                                                                  alpha: 0.5,
-                                                                )
-                                                          : AppColors
-                                                                .statusInProgress
-                                                                .withValues(
-                                                                  alpha: 0.5,
-                                                                ),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            999,
-                                                          ),
-                                                    ),
-                                                  ),
-                                                  SizedBox(width: 8),
-
-                                                  Text(
-                                                    "${(progress * 100).toInt()}%",
-                                                  ),
-                                                ],
-                                              ),
-
-                                              //row edit delete publish utk admin
-                                              if (widget.mode ==
-                                                  HomeMode.admin) ...[
-                                                SizedBox(height: 6),
-                                                Row(
-                                                  children: [
-                                                    ButtonActionAdmin(
-                                                      text: isPublished
-                                                          ? "Unpublish"
-                                                          : "Publish",
-                                                      bgColor: isPublished
-                                                          ? Colors.transparent
-                                                          : AppColors
-                                                                .primaryCream,
-                                                      onPressed: () {
-                                                        //blm tersedia
-                                                        ScaffoldMessenger.of(
-                                                          context,
-                                                        ).showSnackBar(
-                                                          const SnackBar(
-                                                            content: Text(
-                                                              "Fitur ini belum tersedia pada MVP",
-                                                            ),
-                                                          ),
-                                                        );
-                                                        // setState(() {
-                                                        //   isPublished =
-                                                        //       !isPublished;
-                                                        // });
-                                                      },
-                                                    ),
-                                                    SizedBox(width: 5),
-                                                    ButtonActionAdmin(
-                                                      text: "Edit",
-                                                      bgColor: AppColors
-                                                          .blueComponent,
-                                                      onPressed: () {
-                                                        //blm tersedia
-                                                        ScaffoldMessenger.of(
-                                                          context,
-                                                        ).showSnackBar(
-                                                          const SnackBar(
-                                                            content: Text(
-                                                              "Fitur ini belum tersedia pada MVP",
-                                                            ),
-                                                          ),
-                                                        );
-                                                      },
-                                                    ),
-                                                    SizedBox(width: 5),
-                                                    ButtonActionAdmin(
-                                                      text: "Delete",
-                                                      bgColor: AppColors
-                                                          .redComponent,
-                                                      onPressed: () {
-                                                        //blm tersedia
-                                                        ScaffoldMessenger.of(
-                                                          context,
-                                                        ).showSnackBar(
-                                                          const SnackBar(
-                                                            content: Text(
-                                                              "Fitur ini belum tersedia pada MVP",
-                                                            ),
-                                                          ),
-                                                        );
-                                                      },
-                                                    ),
-                                                  ],
-                                                ),
-                                              ], //if
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              //stack locked
-                              if (isStatus == "l")
-                                Positioned.fill(
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primaryCream.withValues(
-                                        alpha: 0.5,
-                                      ),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                    //end card module
-                  );
-                },
+              // LIST MODUL
+              ModuleList(
+                key: ValueKey(widget.mode),
+                mode: widget.mode,
+                currentUserUid: currentUserUid!,
+                onRefresh: widget.onRefresh,
               ),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  //function local utk create/edit modul
+  Future<void> _showModuleBottomSheet({ModuleModelFirebase? module}) async {
+    _moduleNameController.text = module?.moduleName ?? '';
+    _descriptionController.text = module?.description ?? '';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 20,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  module == null ? "Buat Modul Baru" : "Edit Modul",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Judul Chapter
+                const Text(
+                  "Nama Modul",
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                TextFieldComponent(
+                  hinttext: "Masukkan nama modul",
+                  textFieldCont: _moduleNameController,
+                ),
+                const SizedBox(height: 16),
+
+                // Deskripsi Singkat
+                const Text(
+                  "Deskripsi",
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                TextFieldComponent(
+                  hinttext: "Masukkan deskripsi",
+                  lines: 2,
+                  textFieldCont: _descriptionController,
+                ),
+                const SizedBox(height: 24),
+
+                ButtonComponent(
+                  text: "Simpan",
+                  bgcolor: AppColors.primaryHoney,
+                  onPressed: () async {
+                    if (module == null) {
+                      //create
+                      await _moduleRepo.createModule(
+                        moduleName: _moduleNameController.text.trim(),
+                        description: _descriptionController.text.trim(),
+                      );
+                    } else {
+                      //edit
+                      await _moduleRepo.updateModule(
+                        moduleId: module.id,
+                        moduleName: _moduleNameController.text.trim(),
+                        description: _descriptionController.text.trim(),
+                      );
+                    }
+                    context.pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          module == null
+                              ? "Chapter berhasil dibuat"
+                              : "Chapter berhasil diperbarui",
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 50),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

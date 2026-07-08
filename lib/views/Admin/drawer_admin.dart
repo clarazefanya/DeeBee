@@ -16,8 +16,8 @@ class DrawerAdmin extends StatelessWidget {
     final menus = [
       "Home Admin",
       "Asset Scene",
-      "Manajemen Pengguna",
-      "DB Structure Viewer",
+      // "Manajemen Pengguna",
+      // "DB Structure Viewer",
     ];
 
     return Drawer(

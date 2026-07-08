@@ -7,6 +7,9 @@ class SceneModelFirebase {
   @JsonKey(defaultValue: '')
   final String id;
 
+  @JsonKey(defaultValue: 0)
+  final int sceneOrder;
+
   @JsonKey(defaultValue: '')
   final String levelId;
 
@@ -51,6 +54,7 @@ class SceneModelFirebase {
 
   SceneModelFirebase({
     required this.id,
+    required this.sceneOrder,
     required this.levelId,
     this.bgImageId,
     this.charImageId,

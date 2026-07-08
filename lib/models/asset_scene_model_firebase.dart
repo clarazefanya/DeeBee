@@ -11,7 +11,7 @@ class AssetSceneModelFirebase {
   final String imageName;
 
   @JsonKey(defaultValue: '')
-  final String imageUrl;
+  final String imageBase64;
 
   @JsonKey(defaultValue: '')
   final String category;
@@ -19,7 +19,7 @@ class AssetSceneModelFirebase {
   AssetSceneModelFirebase({
     required this.id,
     required this.imageName,
-    required this.imageUrl,
+    required this.imageBase64,
     required this.category,
   });
 

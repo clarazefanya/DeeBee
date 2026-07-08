@@ -4,6 +4,7 @@ import 'package:deebee_user/database/preference_handler.dart';
 import 'package:deebee_user/database/repository/firebase/user_repository_firebase.dart';
 import 'package:deebee_user/extension/navigator.dart';
 import 'package:deebee_user/models/user_model_firebase.dart';
+import 'package:deebee_user/utils/firebase_error_helper.dart';
 import 'package:deebee_user/views/auth/login.dart';
 import 'package:deebee_user/views/profile/about_us.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -19,20 +20,21 @@ class Profile extends StatefulWidget {
 }
 
 class _ProfileState extends State<Profile> {
+  //Ambil UID
+  final String? currentUserUid = FirebaseAuth.instance.currentUser?.uid;
+  //Panggil repo
+  final _userRepo = UserRepositoryFirebase();
+
   @override
   Widget build(BuildContext context) {
-    //Ambil UID
-    final String? currentUserUid = FirebaseAuth.instance.currentUser?.uid;
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: DeebeeAppbar(),
-
       //listview dibungkus FutureBuilder
       body: FutureBuilder<UserModelFirebase?>(
-        // Panggil fungsi getUserById
+        // Panggil fungsi getUserByUid
         future: currentUserUid != null
-            ? UserRepositoryFirebase().getUserByUid(currentUserUid)
+            ? UserRepositoryFirebase().getUserByUid(currentUserUid!)
             : Future.value(null),
         builder: (context, snapshot) {
           //Kondisi Loading
@@ -434,7 +436,7 @@ class _ProfileState extends State<Profile> {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
                                         content: Text(
-                                          "Fitur ini belum tersedia pada MVP",
+                                          "Fitur ini belum tersedia.",
                                         ),
                                       ),
                                     );
@@ -564,7 +566,7 @@ class _ProfileState extends State<Profile> {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
                                         content: Text(
-                                          "Fitur ini belum tersedia pada MVP",
+                                          "Fitur ini belum tersedia.",
                                         ),
                                       ),
                                     );
@@ -598,7 +600,7 @@ class _ProfileState extends State<Profile> {
                                       ).showSnackBar(
                                         const SnackBar(
                                           content: Text(
-                                            'Akun admin tidak dapat dihapus',
+                                            'Akun admin tidak dapat dihapus.',
                                           ),
                                         ),
                                       );
@@ -606,7 +608,7 @@ class _ProfileState extends State<Profile> {
                                     }
 
                                     if (currentUserUid != null) {
-                                      confirmDeleteAccount(currentUserUid);
+                                      confirmDeleteAccount(currentUserUid!);
                                     }
                                   },
                                 ),
@@ -630,6 +632,7 @@ class _ProfileState extends State<Profile> {
                               vertical: 12,
                             ),
                           ),
+                          onPressed: _confirmLogout,
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -647,17 +650,6 @@ class _ProfileState extends State<Profile> {
                               ),
                             ],
                           ),
-                          onPressed: () async {
-                            //logic logout
-                            await FirebaseAuth.instance.signOut();
-                            await PreferenceHandler.logOut();
-                            if (!context.mounted) return;
-                            context.pushAndRemoveAll(Login());
-                            // snackbar
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("Berhasil Logout")),
-                            );
-                          },
                         ),
                       ],
                     ),
@@ -703,17 +695,35 @@ class _ProfileState extends State<Profile> {
             // Tombol Ya
             TextButton(
               onPressed: () async {
-                Navigator.pop(dialogContext); // Tutup dialog dulu
+                final messenger = ScaffoldMessenger.of(context);
 
-                // Jalankan fungsi delete
-                // await UserRepository().deleteUser(userId);
-                await PreferenceHandler.logOut();
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Berhasil menghapus akun")),
-                );
+                Navigator.pop(dialogContext);
 
-                context.pushReplacement(Login());
+                try {
+                  await _userRepo.deleteUserCascade(uid);
+
+                  await PreferenceHandler.logOut();
+
+                  if (!mounted) return;
+
+                  messenger.showSnackBar(
+                    const SnackBar(content: Text("Akun berhasil dihapus")),
+                  );
+
+                  context.pushReplacement(Login());
+                } on FirebaseAuthException catch (e) {
+                  if (!mounted) return;
+
+                  messenger.showSnackBar(
+                    SnackBar(content: Text(firebaseAuthErrorMessage(e))),
+                  );
+                } catch (e) {
+                  if (!mounted) return;
+
+                  messenger.showSnackBar(
+                    SnackBar(content: Text("Terjadi kesalahan: $e")),
+                  );
+                }
               },
               style: TextButton.styleFrom(foregroundColor: Colors.red),
               child: const Text("Ya, Hapus"),
@@ -722,5 +732,41 @@ class _ProfileState extends State<Profile> {
         );
       },
     );
+  }
+
+  //funtion local konfirmasi logout
+  Future<void> _confirmLogout() async {
+    final isLogout = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text("Konfirmasi Keluar"),
+          content: const Text("Apakah Anda yakin ingin keluar dari akun ini?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text("Batal"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text("Keluar", style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (isLogout != true) return;
+
+    await FirebaseAuth.instance.signOut();
+    await PreferenceHandler.logOut();
+
+    if (!mounted) return;
+
+    context.pushAndRemoveAll(Login());
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text("Berhasil logout")));
   }
 }

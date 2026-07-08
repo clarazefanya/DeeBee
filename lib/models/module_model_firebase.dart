@@ -7,6 +7,9 @@ class ModuleModelFirebase {
   @JsonKey(defaultValue: '')
   final String id;
 
+  @JsonKey(defaultValue: 0)
+  final int order;
+
   @JsonKey(defaultValue: '')
   final String moduleName;
 
@@ -18,6 +21,7 @@ class ModuleModelFirebase {
 
   ModuleModelFirebase({
     required this.id,
+    required this.order,
     required this.moduleName,
     required this.description,
     required this.isPublished,

@@ -9,6 +9,7 @@ part of 'scene_model_firebase.dart';
 SceneModelFirebase _$SceneModelFirebaseFromJson(Map<String, dynamic> json) =>
     SceneModelFirebase(
       id: json['id'] as String? ?? '',
+      sceneOrder: (json['sceneOrder'] as num?)?.toInt() ?? 0,
       levelId: json['levelId'] as String? ?? '',
       bgImageId: json['bgImageId'] as String?,
       charImageId: json['charImageId'] as String?,
@@ -28,6 +29,7 @@ SceneModelFirebase _$SceneModelFirebaseFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$SceneModelFirebaseToJson(SceneModelFirebase instance) =>
     <String, dynamic>{
       'id': instance.id,
+      'sceneOrder': instance.sceneOrder,
       'levelId': instance.levelId,
       'bgImageId': instance.bgImageId,
       'charImageId': instance.charImageId,

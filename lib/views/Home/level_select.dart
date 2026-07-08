@@ -2,13 +2,13 @@ import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/components/components_admin.dart';
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/database/preference_handler.dart';
-import 'package:deebee_user/database/repository/level_repository.dart';
-import 'package:deebee_user/database/repository/scene_repository.dart';
+import 'package:deebee_user/database/repository/firebase/level_repository_firebase.dart';
+import 'package:deebee_user/database/repository/firebase/scene_repository_firebase.dart';
 import 'package:deebee_user/extension/navigator.dart';
 import 'package:deebee_user/models/enums/home_mode_model.dart';
 import 'package:deebee_user/models/enums/progress_status.dart';
 import 'package:deebee_user/models/enums/type_enum_model.dart';
-import 'package:deebee_user/models/level_model.dart';
+import 'package:deebee_user/models/level_model_firebase.dart';
 import 'package:deebee_user/services/progress_service.dart';
 import 'package:deebee_user/views/admin/scene_list.dart';
 import 'package:deebee_user/views/gameplay/gameplay_scene.dart';
@@ -25,7 +25,7 @@ class LevelSelect extends StatefulWidget {
   });
 
   final HomeMode mode;
-  final int chapterId;
+  final String chapterId;
   final String chapterName;
   final String chapterTitle;
   final String chapterLongDesc;
@@ -36,18 +36,18 @@ class LevelSelect extends StatefulWidget {
 
 class _LevelSelectState extends State<LevelSelect> {
   //future di level
-  late Future<List<LevelModel>> _levelsFuture;
+  late Future<List<LevelModelFirebase>> _levelsFuture;
+  final _levelRepo = LevelRepositoryFirebase();
 
-  //Ambil userId n role dari SharedPreferences
-  late int? currentUserId = PreferenceHandler.userId;
+  //Ambil userUid n role dari SharedPreferences
+  late String? currentUserUid = PreferenceHandler.userUid;
   final String? currentRole = PreferenceHandler.role;
 
   @override
   void initState() {
     super.initState();
-
-    currentUserId = PreferenceHandler.userId;
-    _levelsFuture = LevelRepository().getLevelsByChapter(widget.chapterId);
+    currentUserUid = PreferenceHandler.userUid;
+    _levelsFuture = _levelRepo.getLevelsByChapter(widget.chapterId);
   }
 
   @override
@@ -98,55 +98,8 @@ class _LevelSelectState extends State<LevelSelect> {
                 Text(widget.chapterLongDesc, style: TextStyle(fontSize: 14)),
                 SizedBox(height: 24),
 
-                //progres level
-                // Container(
-                //   padding: EdgeInsets.all(16),
-                //   decoration: BoxDecoration(
-                //     color: AppColors.primaryCream,
-                //     borderRadius: BorderRadius.circular(12),
-                //     border: Border.all(color: AppColors.primaryHoney),
-                //   ),
-                //   //column tulisan dan progress bar
-                //   child: Column(
-                //     children: [
-                //       //row text dan angka progress
-                //       Row(
-                //         crossAxisAlignment: CrossAxisAlignment.center,
-                //         children: [
-                //           Text(
-                //             "Progres  Level",
-                //             style: TextStyle(
-                //               color: AppColors.primaryHoney,
-                //               fontWeight: FontWeight.w600,
-                //               fontSize: 14,
-                //             ),
-                //           ),
-                //           Spacer(),
-                //           Text(
-                //             "32%",
-                //             style: TextStyle(
-                //               color: AppColors.primaryHoney,
-                //               fontWeight: FontWeight.bold,
-                //               fontSize: 14,
-                //             ),
-                //           ),
-                //         ],
-                //       ),
-                //       SizedBox(height: 8),
-                //       LinearProgressIndicator(
-                //         value: 0.32,
-                //         backgroundColor: const Color(0xFFEBDFCE),
-                //         color: AppColors.primaryHoney,
-                //         borderRadius: BorderRadius.circular(9999),
-                //         minHeight: 16,
-                //       ),
-                //     ],
-                //   ),
-                // ),
-                // SizedBox(height: 24),
-
                 //future builder utk intro dan grid level
-                FutureBuilder<List<LevelModel>>(
+                FutureBuilder<List<LevelModelFirebase>>(
                   future: _levelsFuture,
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
@@ -210,17 +163,18 @@ class _LevelSelectState extends State<LevelSelect> {
                                 await context.push(
                                   SceneList(
                                     namaLevel: "Intro",
-                                    levelId: intro.id!,
+                                    levelId: intro.id,
                                     levelNote: intro.note,
                                     mode: widget.mode,
+                                    isIntro: true,
                                   ),
                                 );
                                 _refreshLevels();
                               } else {
                                 //selain mode admin, ke halaman gameplay
                                 //Ambil data scene untuk level intro dari database
-                                final scenes = await SceneRepository()
-                                    .getScenesByLevel(intro.id!);
+                                final scenes = await SceneRepositoryFirebase()
+                                    .getScenesByLevel(intro.id);
 
                                 if (scenes.isEmpty) {
                                   // Antisipasi jika admin belum membuat scene sama sekali di level ini
@@ -237,7 +191,7 @@ class _LevelSelectState extends State<LevelSelect> {
                                 await context.push(
                                   Gameplay(
                                     namaLevel: "Intro",
-                                    levelId: intro.id!,
+                                    levelId: intro.id,
                                     scenes: scenes,
                                     isIntro: true,
                                     mode: widget.mode,
@@ -282,8 +236,8 @@ class _LevelSelectState extends State<LevelSelect> {
                             // future builder utk status level
                             return FutureBuilder<ProgressStatus>(
                               future: ProgressService().getLevelStatus(
-                                currentUserId!,
-                                level.id!,
+                                currentUserUid!,
+                                level.id,
                               ),
                               builder: (context, statusSnapshot) {
                                 if (!statusSnapshot.hasData) {
@@ -333,7 +287,7 @@ class _LevelSelectState extends State<LevelSelect> {
                                                       SceneList(
                                                         namaLevel:
                                                             "Level ${index + 1}",
-                                                        levelId: level.id!,
+                                                        levelId: level.id,
                                                         levelNote: level.note,
                                                         mode: widget.mode,
                                                       ),
@@ -343,9 +297,9 @@ class _LevelSelectState extends State<LevelSelect> {
                                                     //selain mode admin, ke halaman gameplay scene
                                                     //Ambil data scene untuk level gameplay ini
                                                     final scenes =
-                                                        await SceneRepository()
+                                                        await SceneRepositoryFirebase()
                                                             .getScenesByLevel(
-                                                              level.id!,
+                                                              level.id,
                                                             );
 
                                                     if (scenes.isEmpty) {
@@ -365,7 +319,7 @@ class _LevelSelectState extends State<LevelSelect> {
                                                       Gameplay(
                                                         namaLevel:
                                                             "Level ${index + 1}",
-                                                        levelId: level.id!,
+                                                        levelId: level.id,
                                                         scenes: scenes,
                                                         mode: widget.mode,
                                                       ),
@@ -425,7 +379,7 @@ class _LevelSelectState extends State<LevelSelect> {
                                                             .redComponent,
                                                         onTap: () =>
                                                             _deleteLevel(
-                                                              level.id!,
+                                                              level.id,
                                                             ),
                                                       ),
                                                     ],
@@ -475,13 +429,13 @@ class _LevelSelectState extends State<LevelSelect> {
   //function local utk refresh data
   void _refreshLevels() {
     setState(() {
-      _levelsFuture = LevelRepository().getLevelsByChapter(widget.chapterId);
+      _levelsFuture = _levelRepo.getLevelsByChapter(widget.chapterId);
     });
   }
 
   //function local utk create level
   Future<void> _createLevel() async {
-    await LevelRepository().createLevel(
+    await _levelRepo.createLevel(
       chapterId: widget.chapterId,
       levelType: LevelType.gameplay,
     );
@@ -489,7 +443,7 @@ class _LevelSelectState extends State<LevelSelect> {
   }
 
   //function local utk delete level
-  Future<void> _deleteLevel(int levelId) async {
+  Future<void> _deleteLevel(String levelId) async {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -512,10 +466,14 @@ class _LevelSelectState extends State<LevelSelect> {
           ),
           TextButton(
             onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
+
               context.pop();
-              await LevelRepository().deleteLevel(levelId);
+              await _levelRepo.deleteLevelCascade(levelId);
+              if (!mounted) return;
+
               _refreshLevels();
-              ScaffoldMessenger.of(context).showSnackBar(
+              messenger.showSnackBar(
                 const SnackBar(content: Text('Level berhasil dihapus')),
               );
             },
