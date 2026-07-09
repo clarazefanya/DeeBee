@@ -46,7 +46,7 @@ class _AboutUsState extends State<AboutUs> {
               SizedBox(height: 20),
               Text("Dibuat Oleh: Clara Zefanya Putri Junaidi"),
               SizedBox(height: 20),
-              Text("Versi Aplikasi: 2.0.0"),
+              Text("Versi Aplikasi: 2.1.0"),
             ],
           ),
         ),
