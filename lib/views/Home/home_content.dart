@@ -300,8 +300,8 @@ class _HomeContentState extends State<HomeContent> {
                       SnackBar(
                         content: Text(
                           module == null
-                              ? "Chapter berhasil dibuat"
-                              : "Chapter berhasil diperbarui",
+                              ? "Modul berhasil dibuat"
+                              : "Modul berhasil diperbarui",
                         ),
                       ),
                     );

@@ -7,6 +7,7 @@ import 'package:deebee_user/models/user_model_firebase.dart';
 import 'package:deebee_user/utils/firebase_error_helper.dart';
 import 'package:deebee_user/views/auth/login.dart';
 import 'package:deebee_user/views/profile/about_us.dart';
+import 'package:deebee_user/views/profile/update_profile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -414,13 +415,13 @@ class _ProfileState extends State<Profile> {
                                     backgroundColor: AppColors.primaryHoney,
                                     radius: 16,
                                     child: Icon(
-                                      Icons.settings_outlined,
+                                      Icons.person,
                                       color: AppColors.primaryBlack,
                                       size: 20,
                                     ),
                                   ),
                                   title: const Text(
-                                    'Pengaturan',
+                                    'Update Profile',
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
@@ -430,16 +431,18 @@ class _ProfileState extends State<Profile> {
                                     Icons.chevron_right,
                                     // color: Colors.grey,
                                   ),
-                                  onTap: () {
-                                    // Aksi saat ditekan
-                                    //blm tersedia
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          "Fitur ini belum tersedia.",
-                                        ),
+                                  onTap: () async {
+                                    // ke halaman update profile
+                                    final result = await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => const UpdateProfile(),
                                       ),
                                     );
+
+                                    if (result == true) {
+                                      setState(() {});
+                                    }
                                   },
                                 ),
 

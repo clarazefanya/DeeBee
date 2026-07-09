@@ -70,4 +70,16 @@ class UserRepositoryFirebase {
     // hapus dokumen user di Firestore
     await _firestore.collection('users').doc(uid).delete();
   }
+
+  //update profile
+  Future<void> updateProfile({
+    required String uid,
+    required String name,
+    required int avatarIndex,
+  }) async {
+    await _firestore.collection('users').doc(uid).update({
+      'name': name,
+      'avatarIndex': avatarIndex,
+    });
+  }
 }

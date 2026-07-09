@@ -402,8 +402,8 @@ class _ModuleListState extends State<ModuleList> {
                       SnackBar(
                         content: Text(
                           module == null
-                              ? "Chapter berhasil dibuat"
-                              : "Chapter berhasil diperbarui",
+                              ? "Modul berhasil dibuat"
+                              : "Modul berhasil diperbarui",
                         ),
                       ),
                     );
