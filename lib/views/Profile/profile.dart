@@ -415,7 +415,7 @@ class _ProfileState extends State<Profile> {
                                     backgroundColor: AppColors.primaryHoney,
                                     radius: 16,
                                     child: Icon(
-                                      Icons.person,
+                                      Icons.person_outline_rounded,
                                       color: AppColors.primaryBlack,
                                       size: 20,
                                     ),

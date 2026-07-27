@@ -82,4 +82,20 @@ class UserRepositoryFirebase {
       'avatarIndex': avatarIndex,
     });
   }
+
+  //update user management
+  Future<void> updateUser({
+    required String uid,
+    required String name,
+    required String role,
+    required bool isActive,
+    required int avatarIndex,
+  }) async {
+    await _firestore.collection('users').doc(uid).update({
+      'name': name,
+      'role': role,
+      'isActive': isActive,
+      'avatarIndex': avatarIndex,
+    });
+  }
 }

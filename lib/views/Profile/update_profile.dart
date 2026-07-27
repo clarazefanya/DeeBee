@@ -149,7 +149,7 @@ class _UpdateProfileState extends State<UpdateProfile> {
                     );
                   },
                 ),
-                const SizedBox(height: 20),
+                // const SizedBox(height: 20),
 
                 // Input Nama
                 const Text(
