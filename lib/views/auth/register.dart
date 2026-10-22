@@ -1,10 +1,15 @@
 import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/constants/colors.dart';
-import 'package:deebee_user/database/repository/user_repository.dart';
+import 'package:deebee_user/database/repository/firebase/user_repository_firebase.dart';
 import 'package:deebee_user/extension/navigator.dart';
-import 'package:deebee_user/models/user_model.dart';
+import 'package:deebee_user/models/user_model_firebase.dart';
+import 'package:deebee_user/services/auth_service.dart';
+import 'package:deebee_user/utils/firebase_error_helper.dart';
 import 'package:deebee_user/views/auth/login.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Register extends StatefulWidget {
   const Register({super.key});
@@ -30,13 +35,19 @@ class _RegisterState extends State<Register> {
   final TextEditingController confirmpasswordController =
       TextEditingController();
 
+  //panggil AuthService & UserRepositoryFirebase
+  final AuthService _authService = AuthService();
+  final UserRepositoryFirebase _userRepositoryFirebase =
+      UserRepositoryFirebase();
+  bool isLoading = false; //loading button
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 48),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 80),
           child: Column(
             children: [
               //logo
@@ -216,12 +227,53 @@ class _RegisterState extends State<Register> {
                         );
                       },
                     ),
+
+                    // Kebijakan Privasi
+                    RichText(
+                      textAlign: TextAlign.center,
+                      text: TextSpan(
+                        text:
+                            "Dengan mendaftar, Anda menyatakan telah membaca dan menyetujui ",
+                        style: TextStyle(
+                          color: AppColors.borderBrown,
+                          fontSize: 14,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: "Kebijakan Privasi",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              // Kamu bisa ganti warnanya agar terlihat seperti link
+                              color: const Color(0xFF7C5800),
+                              decoration: TextDecoration.underline,
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () async {
+                                final Uri url = Uri.parse(
+                                  'https://docs.google.com/document/d/1iE6dI2ksaWk0coA4-IUwf_khOwlzPzWP9d0cQaK1VHw/edit?usp=sharing',
+                                );
+                                if (!await launchUrl(url)) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Gagal membuka link kebijakan privasi',
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                          ),
+                          TextSpan(text: " kami."),
+                        ],
+                      ),
+                    ),
                     SizedBox(height: 16),
 
                     //button daftar
                     ButtonComponent(
                       text: "Daftar",
                       bgcolor: AppColors.primaryHoney,
+                      isLoading: isLoading,
                       onPressed: register, //panggil function button register
                     ),
                     SizedBox(height: 16),
@@ -270,43 +322,63 @@ class _RegisterState extends State<Register> {
       return;
     }
 
-    // Dapatkan waktu lokal saat ini
-    String currentTime = DateTime.now().toLocal().toIso8601String();
+    // Button menampilkan loading
+    setState(() {
+      isLoading = true;
+    });
 
-    // Buat model user
-    final user = UserModel(
-      name: nameController.text.trim(),
-      email: emailController.text.trim(),
-      password: passwordController.text,
-      avatarIndex: selectedAvatar,
-      role: 'user', // role saat register pasti "user"
-      isActive: true,
-      createdAt: currentTime,
-      xp: 0,
-    );
+    try {
+      // Panggil user credential dari AuthService
+      final credential = await _authService.register(
+        email: emailController.text.trim(),
+        password: passwordController.text,
+      );
+      // Ambil UID dari credential
+      final uid = credential.user!.uid;
 
-    // Panggil fungsi registerUser di UserRepository, create
-    bool success = await UserRepository().registerUser(user);
-    print("sukses: $success");
+      // Buat UserModelFirebase
+      final user = UserModelFirebase(
+        uid: uid,
+        name: nameController.text.trim(),
+        email: emailController.text.trim(),
+        avatarIndex: selectedAvatar,
+        role: 'user',
+        isActive: true,
+        createdAt: DateTime.now(),
+        lastLevelId: null,
+        lastSceneId: null,
+        xp: 0,
+      );
 
-    // Cek apakah widget masih terpasang (mounted) sebelum menggunakan context
-    if (!mounted) return;
+      // Simpan ke Firestore
+      await _userRepositoryFirebase.createUser(user);
 
-    // Cek hasil register
-    if (success) {
-      // Create berhasil
-      print("berhasil");
+      // Cek apakah widget masih terpasang (mounted) sebelum menggunakan context
+      if (!mounted) return;
+
+      // Register berhasil, push ke hlmn login
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Register berhasil")));
       context.push(Login());
-    } else {
-      // Create gagal
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Email sudah terdaftar atau terjadi kesalahan"),
-        ),
-      );
+    } on FirebaseAuthException catch (e) {
+      // REGISTER GAGAL (error dari Firebase Auth)
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(firebaseAuthErrorMessage(e))));
+    } catch (e) {
+      // REGISTER GAGAL (untuk error lain)
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Terjadi kesalahan: $e')));
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 }

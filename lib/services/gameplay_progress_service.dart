@@ -1,13 +1,13 @@
-import 'package:deebee_user/database/repository/scene_repository.dart';
-import 'package:deebee_user/database/repository/user_repository.dart';
-import 'package:deebee_user/database/repository/user_scene_progress_repository.dart';
-import 'package:deebee_user/models/scene_model.dart';
-import 'package:deebee_user/models/user_scene_progress_model.dart';
+import 'package:deebee_user/database/repository/firebase/scene_repository_firebase.dart';
+import 'package:deebee_user/database/repository/firebase/user_repository_firebase.dart';
+import 'package:deebee_user/database/repository/firebase/user_scene_progress_repository_firebase.dart';
+import 'package:deebee_user/models/scene_model_firebase.dart';
+import 'package:deebee_user/models/user_scene_progress_model_firebase.dart';
 
 class GameplayProgressService {
-  final UserRepository userRepository;
-  final UserSceneProgressRepository progressRepository;
-  final SceneRepository sceneRepository;
+  final UserRepositoryFirebase userRepository;
+  final UserSceneProgressRepositoryFirebase progressRepository;
+  final SceneRepositoryFirebase sceneRepository;
 
   GameplayProgressService({
     required this.userRepository,
@@ -16,16 +16,16 @@ class GameplayProgressService {
   });
 
   Future<void> completeScene({
-    required int userId,
-    required SceneModel scene,
+    required String userUid,
+    required SceneModelFirebase scene,
   }) async {
     print('=== COMPLETE SCENE START ===');
-    print('userId: $userId');
+    print('userUid: $userUid');
     print('sceneId: ${scene.id}');
     print('rewardXp: ${scene.rewardXp}');
 
     // Data user sebelum update
-    final beforeUser = await userRepository.getUserById(userId);
+    final beforeUser = await userRepository.getUserByUid(userUid);
     print('USER BEFORE:');
     print('xp = ${beforeUser?.xp}');
     print('lastSceneId = ${beforeUser?.lastSceneId}');
@@ -33,8 +33,8 @@ class GameplayProgressService {
 
     // cek scene apakah sudah pernah selesai
     final existing = await progressRepository.getProgressByUserAndScene(
-      userId,
-      scene.id!,
+      userUid,
+      scene.id,
     );
     if (existing != null) {
       print('Scene sudah pernah diselesaikan, skip.');
@@ -43,37 +43,39 @@ class GameplayProgressService {
     }
 
     // buat model dan insert progress
-    final progress = UserSceneProgressModel(
-      userId: userId,
-      sceneId: scene.id!,
+    final progress = UserSceneProgressModelFirebase(
+      id: '',
+      userId: userUid,
+      sceneId: scene.id,
       isCompleted: true,
       earnedXp: scene.rewardXp,
-      completedAt: DateTime.now().toIso8601String(),
+      completedAt: DateTime.now(),
     );
-
     await progressRepository.createProgress(progress);
     print('Progress berhasil disimpan.');
 
     // tambah xp
-    await userRepository.addXp(userId, scene.rewardXp);
+    await userRepository.addXp(userUid, scene.rewardXp);
     print('XP berhasil ditambah.');
 
-    // update last scene (last_scene_id)
-    await userRepository.updateLastSceneId(userId, scene.id!);
+    // update lastSceneId
+    await userRepository.updateLastSceneId(userUid, scene.id);
     print('last_scene_id berhasil diupdate.');
 
-    // == UPDATE LAST LEVEL (last_level_id) ==
+    // == UPDATE LAST LEVEL (lastLevelId) ==
     // 1. Ambil semua scene dalam level
     final scenesInLevel = await sceneRepository.getScenesByLevel(scene.levelId);
     // 2. cari scene terakhir
-    final lastScene = scenesInLevel.last;
-    // 3. Jika scene sekarang adalah scene terakhir level, update last level
-    if (scene.id == lastScene.id) {
-      await userRepository.updateLastLevelId(userId, scene.levelId);
-      print('last_level_id berhasil diupdate.');
+    if (scenesInLevel.isNotEmpty) {
+      final lastScene = scenesInLevel.last;
+      // 3. Jika scene sekarang adalah scene terakhir level, update last level
+      if (scene.id == lastScene.id) {
+        await userRepository.updateLastLevelId(userUid, scene.levelId);
+        print('last_level_id berhasil diupdate.');
+      }
     }
     // Data user sesudah update
-    final afterUser = await userRepository.getUserById(userId);
+    final afterUser = await userRepository.getUserByUid(userUid);
     print('USER AFTER:');
     print('xp = ${afterUser?.xp}');
     print('lastSceneId = ${afterUser?.lastSceneId}');
@@ -84,8 +86,8 @@ class GameplayProgressService {
 
 //helper utk dipanggil oleh tombol Lanjut/Jawab di scene
 Future<void> saveSceneProgress({
-  required int userId,
-  required SceneModel scene,
+  required String userUid,
+  required SceneModelFirebase scene,
   bool isIntro = false,
 }) async {
   //jika isIntro true, jgn simpan progress
@@ -93,10 +95,10 @@ Future<void> saveSceneProgress({
 
   //jika isIntro false, simpan progress
   final gameplayProgressService = GameplayProgressService(
-    userRepository: UserRepository(),
-    progressRepository: UserSceneProgressRepository(),
-    sceneRepository: SceneRepository(),
+    userRepository: UserRepositoryFirebase(),
+    progressRepository: UserSceneProgressRepositoryFirebase(),
+    sceneRepository: SceneRepositoryFirebase(),
   );
 
-  await gameplayProgressService.completeScene(userId: userId, scene: scene);
+  await gameplayProgressService.completeScene(userUid: userUid, scene: scene);
 }

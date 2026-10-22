@@ -1,9 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/components/components_admin.dart';
 import 'package:deebee_user/constants/colors.dart';
-import 'package:deebee_user/database/repository/asset_scene_repository.dart';
+import 'package:deebee_user/database/repository/firebase/asset_scene_repository_firebase.dart';
 import 'package:deebee_user/extension/navigator.dart';
-import 'package:deebee_user/models/asset_scene_model.dart';
+import 'package:deebee_user/models/asset_scene_model_firebase.dart';
+import 'package:deebee_user/utils/image_converter.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -19,33 +21,25 @@ class AssetSceneList extends StatefulWidget {
 class _AssetSceneListState extends State<AssetSceneList> {
   //logic upload gambar
   final ImagePicker picker = ImagePicker();
+  final _repository = AssetSceneRepositoryFirebase();
 
-  Future<void> uploadAssetScene(String category) async {
+  Future<bool> uploadAssetScene(String category) async {
     final XFile? file = await picker.pickImage(source: ImageSource.gallery);
-    if (file == null) return;
+    if (file == null) {
+      return false;
+    }
     final bytes = await file.readAsBytes();
+    final id = FirebaseFirestore.instance.collection('asset_scene').doc().id;
 
-    final asset = AssetSceneModel(
+    final asset = AssetSceneModelFirebase(
+      id: id,
       imageName: file.name,
-      image: bytes,
+      imageBase64: await ImageConverter.compressAndConvertToBase64(bytes),
       category: category,
     );
 
-    await AssetSceneRepository().createAssetScene(asset);
-  }
-
-  //refresh halaman
-  late Future<List<AssetSceneModel>> assetsFuture;
-  @override
-  void initState() {
-    super.initState();
-    loadAssets();
-  }
-
-  void loadAssets() {
-    assetsFuture = AssetSceneRepository().getAssetSceneByCategory(
-      widget.category,
-    );
+    await _repository.createAssetScene(asset);
+    return true;
   }
 
   @override
@@ -89,18 +83,28 @@ class _AssetSceneListState extends State<AssetSceneList> {
             ButtonCreateAdmin(
               text: "Upload Gambar",
               onPressed: () async {
-                await uploadAssetScene(widget.category);
-                setState(() {
-                  loadAssets();
-                });
+                try {
+                  final success = await uploadAssetScene(widget.category);
+                  if (!mounted) return;
+                  if (success) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Upload berhasil")),
+                    );
+                  }
+                } catch (e) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(e.toString())));
+                }
               },
             ),
             const SizedBox(height: 20),
 
             //listtile asset scene list
             Expanded(
-              child: FutureBuilder<List<AssetSceneModel>>(
-                future: assetsFuture,
+              child: StreamBuilder<List<AssetSceneModelFirebase>>(
+                stream: _repository.streamAssetSceneByCategory(widget.category),
                 builder: (context, snapshot) {
                   // 1. Kondisi Loading
                   if (snapshot.connectionState == ConnectionState.waiting) {
@@ -111,7 +115,7 @@ class _AssetSceneListState extends State<AssetSceneList> {
                     return const Center(child: Text("Gagal memuat data"));
                   }
                   // Data berhasil didapatkan
-                  final assets = snapshot.data!;
+                  final assets = snapshot.data ?? [];
                   // Belum ada data
                   if (assets.isEmpty) {
                     return const Center(child: Text('Belum ada gambar'));
@@ -134,7 +138,9 @@ class _AssetSceneListState extends State<AssetSceneList> {
                           leading: ClipRRect(
                             borderRadius: BorderRadius.circular(6),
                             child: Image.memory(
-                              asset.image,
+                              ImageConverter.base64ToUint8List(
+                                asset.imageBase64,
+                              ),
                               width: 50,
                               height: 50,
                               fit: BoxFit.cover,
@@ -164,7 +170,7 @@ class _AssetSceneListState extends State<AssetSceneList> {
                                 icon: Icons.delete,
                                 color: AppColors.redComponent,
                                 onTap: () {
-                                  confirmDeleteImage(asset.id!);
+                                  confirmDeleteImage(asset.id);
                                 },
                               ),
                             ],
@@ -183,7 +189,9 @@ class _AssetSceneListState extends State<AssetSceneList> {
                                     ClipRRect(
                                       borderRadius: BorderRadius.circular(15),
                                       child: Image.memory(
-                                        asset.image,
+                                        ImageConverter.base64ToUint8List(
+                                          asset.imageBase64,
+                                        ),
                                         fit: BoxFit.contain,
                                       ),
                                     ),
@@ -206,7 +214,7 @@ class _AssetSceneListState extends State<AssetSceneList> {
   }
 
   /// Function tombol icon delete
-  void confirmDeleteImage(int imageId) {
+  void confirmDeleteImage(String imageId) {
     //tampilkan dialog konfirmasi
     showDialog(
       context: context,
@@ -230,15 +238,11 @@ class _AssetSceneListState extends State<AssetSceneList> {
                 // Jalankan fungsi delete
                 try {
                   //jika berhasil
-                  await AssetSceneRepository().deleteAssetScene(imageId);
+                  await _repository.deleteAssetScene(imageId);
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text("Gambar berhasil dihapus")),
                   );
-
-                  setState(() {
-                    loadAssets();
-                  });
                 } catch (e) {
                   //jika gagal
                   if (!context.mounted) return;
@@ -276,7 +280,7 @@ class _AssetSceneListState extends State<AssetSceneList> {
   }
 
   /// Fungsi untuk memunculkan modal edit
-  void _showEditModal(BuildContext context, AssetSceneModel asset) {
+  void _showEditModal(BuildContext context, AssetSceneModelFirebase asset) {
     // Inisialisasi controller dengan nama gambar existing
     final TextEditingController nameController = TextEditingController(
       text: asset.imageName,
@@ -319,18 +323,14 @@ class _AssetSceneListState extends State<AssetSceneList> {
                   onPressed: () async {
                     if (nameController.text.isNotEmpty) {
                       // 1. Update data di database
-                      await AssetSceneRepository().updateImageName(
-                        asset.id!,
+                      await _repository.updateImageName(
+                        asset.id,
                         nameController.text,
                       );
                       // 2. Tutup bottom sheet
                       if (context.mounted) {
                         Navigator.pop(context);
                       }
-                      // 3. Refresh list agar perubahan langsung terlihat
-                      setState(() {
-                        loadAssets();
-                      });
                     }
                   },
                 ),

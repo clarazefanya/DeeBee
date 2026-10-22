@@ -1,11 +1,13 @@
+import 'dart:convert';
+
 import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/constants/colors.dart';
-import 'package:deebee_user/database/repository/asset_scene_repository.dart';
+import 'package:deebee_user/database/repository/firebase/asset_scene_repository_firebase.dart';
 import 'package:deebee_user/extension/navigator.dart';
-import 'package:deebee_user/models/asset_scene_model.dart';
+import 'package:deebee_user/models/asset_scene_model_firebase.dart';
 import 'package:deebee_user/models/enums/home_mode_model.dart';
 import 'package:deebee_user/models/enums/type_enum_model.dart';
-import 'package:deebee_user/models/scene_model.dart';
+import 'package:deebee_user/models/scene_model_firebase.dart';
 import 'package:deebee_user/views/Gameplay/dialog_interaction.dart';
 import 'package:deebee_user/views/Gameplay/multiple_choice_interaction.dart';
 import 'package:deebee_user/views/Gameplay/sql_input_interaction.dart';
@@ -24,8 +26,8 @@ class Gameplay extends StatefulWidget {
 
   // final GameplayType gameplayType;
   final String namaLevel;
-  final int levelId;
-  final List<SceneModel> scenes;
+  final String levelId;
+  final List<SceneModelFirebase> scenes;
   final bool isIntro;
   final HomeMode mode;
 
@@ -34,20 +36,11 @@ class Gameplay extends StatefulWidget {
 }
 
 class _GameplayState extends State<Gameplay> {
-  // //test var gameplaytype
-  // GameplayType? gameplayType;
-
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   gameplayType = widget.gameplayType;
-  // }
-
   // Melacak scene keberapa yang sedang aktif
   int _currentIndex = 0;
 
   // Mengambil data scene aktif saat ini
-  SceneModel get _currentScene => widget.scenes[_currentIndex];
+  SceneModelFirebase get _currentScene => widget.scenes[_currentIndex];
 
   // Mendapatkan tipe gameplay berdasarkan data di database
   GameplayType get _currentGameplayType =>
@@ -121,7 +114,8 @@ class _GameplayState extends State<Gameplay> {
               ),
               backgroundColor: AppColors.background,
             )
-          : DeebeeAppbar(leading: IconAppbarGameplay()),
+          // : DeebeeAppbar(leading: IconAppbarGameplay()),
+          : DeebeeAppbar(),
       body: _currentGameplayType == GameplayType.sqlInput
           ? _buildSqlLayout()
           : _buildNormalLayout(),
@@ -351,14 +345,14 @@ class DialogSection extends StatelessWidget {
 
 /// area ilustrasi (stack background dan char)
 class IllustrationSection extends StatelessWidget {
-  final int? bgImageId;
-  final int? charImageId;
+  final String? bgImageId;
+  final String? charImageId;
 
   const IllustrationSection({super.key, this.bgImageId, this.charImageId});
 
   @override
   Widget build(BuildContext context) {
-    final assetRepo = AssetSceneRepository();
+    final assetRepo = AssetSceneRepositoryFirebase();
     return ConstrainedBox(
       //Membatasi lebar maksimal container
       constraints: const BoxConstraints(maxWidth: 480),
@@ -379,13 +373,14 @@ class IllustrationSection extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               child: bgImageId == null
                   ? const SizedBox.shrink()
-                  : FutureBuilder<AssetSceneModel?>(
+                  : FutureBuilder<AssetSceneModelFirebase?>(
                       // Pastikan Anda punya fungsi ambil asset tunggal berdasarkan id di repo asset Anda
-                      future: assetRepo.getAssetAssetById(bgImageId!),
+                      future: assetRepo.getAssetById(bgImageId!),
                       builder: (context, snapshot) {
-                        if (snapshot.hasData && snapshot.data?.image != null) {
+                        if (snapshot.hasData &&
+                            snapshot.data?.imageBase64 != null) {
                           return Image.memory(
-                            snapshot.data!.image,
+                            base64Decode(snapshot.data!.imageBase64),
                             fit: BoxFit.cover,
                             alignment: Alignment.center,
                           );
@@ -401,12 +396,12 @@ class IllustrationSection extends StatelessWidget {
           if (charImageId != null)
             Positioned(
               bottom: 2,
-              child: FutureBuilder<AssetSceneModel?>(
-                future: assetRepo.getAssetAssetById(charImageId!),
+              child: FutureBuilder<AssetSceneModelFirebase?>(
+                future: assetRepo.getAssetById(charImageId!),
                 builder: (context, snapshot) {
-                  if (snapshot.hasData && snapshot.data?.image != null) {
+                  if (snapshot.hasData && snapshot.data?.imageBase64 != null) {
                     return Image.memory(
-                      snapshot.data!.image,
+                      base64Decode(snapshot.data!.imageBase64),
                       width: 320,
                       height: 170,
                       fit: BoxFit.contain,

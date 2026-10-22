@@ -1,18 +1,19 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/constants/colors.dart';
-import 'package:deebee_user/database/repository/asset_scene_repository.dart';
-import 'package:deebee_user/database/repository/scene_repository.dart';
+import 'package:deebee_user/database/repository/firebase/asset_scene_repository_firebase.dart';
+import 'package:deebee_user/database/repository/firebase/scene_repository_firebase.dart';
 import 'package:deebee_user/extension/navigator.dart';
-import 'package:deebee_user/models/asset_scene_model.dart';
-import 'package:deebee_user/models/scene_model.dart';
+import 'package:deebee_user/models/asset_scene_model_firebase.dart';
+import 'package:deebee_user/models/scene_model_firebase.dart';
 import 'package:deebee_user/views/Gameplay/sql_input_interaction.dart';
 import 'package:flutter/material.dart';
 
 class SceneForm extends StatefulWidget {
-  final int levelId;
-  final SceneModel? scene; //untuk pembeda Create / Edit
+  final String levelId;
+  final SceneModelFirebase? scene; //untuk pembeda Create / Edit
   final String nomorLevel;
   final String nomorScene;
   final String title;
@@ -34,8 +35,8 @@ class SceneForm extends StatefulWidget {
 
 class _SceneCreateFormState extends State<SceneForm> {
   final _sceneFormKey = GlobalKey<FormState>();
-  final _sceneRepo = SceneRepository();
-  final _assetRepo = AssetSceneRepository();
+  final _sceneRepo = SceneRepositoryFirebase();
+  final _assetRepo = AssetSceneRepositoryFirebase();
 
   //Controllers untuk TextFieldComponent
   final _namaKarakterCont = TextEditingController();
@@ -51,15 +52,15 @@ class _SceneCreateFormState extends State<SceneForm> {
   final _hadiahXpCont = TextEditingController();
 
   //var dropdown
-  int? _selectedBackgroundId;
-  int? _selectedKarakterId;
+  String? _selectedBackgroundId;
+  String? _selectedKarakterId;
   String? _selectedTipeScene =
       'Dialog'; //'Dialog', 'Pilihan ganda', 'Susun kata', 'Tulis SQL',
   String? _kunciJawabanPG; //A, B, C
 
   // List untuk menampung data dari Database
-  List<AssetSceneModel> _listBackground = [];
-  List<AssetSceneModel> _listKarakter = [];
+  List<AssetSceneModelFirebase> _listBackground = [];
+  List<AssetSceneModelFirebase> _listKarakter = [];
 
   // pilihan tipe scene
   final List<String> _listTipeScene = [
@@ -83,15 +84,16 @@ class _SceneCreateFormState extends State<SceneForm> {
       final backgrounds = await _assetRepo.getAssetSceneByCategory(
         "Background",
       );
+
       final karakters = await _assetRepo.getAssetSceneByCategory("Karakter");
 
       setState(() {
         _listBackground = backgrounds;
         _listKarakter = karakters;
 
-        // Jika dalam mode EDIT, pasang nilai lama dari data scene ke dropdown ID
         if (widget.scene != null) {
           final s = widget.scene!;
+
           _namaKarakterCont.text = s.charName ?? '';
           _dialogCont.text = s.charDialog ?? '';
           _kalimatOpsionalCont.text = s.optionalSentence ?? '';
@@ -111,12 +113,15 @@ class _SceneCreateFormState extends State<SceneForm> {
             _selectedTipeScene = 'Dialog';
           }
         }
-        _isLoadingAssets = false; // Loading selesai
+
+        _isLoadingAssets = false;
       });
     } catch (e) {
-      // Handle error jika gagal fetch data
-      setState(() => _isLoadingAssets = false);
-      print("Error loading assets: $e");
+      setState(() {
+        _isLoadingAssets = false;
+      });
+
+      debugPrint(e.toString());
     }
   }
 
@@ -136,13 +141,17 @@ class _SceneCreateFormState extends State<SceneForm> {
   }
 
   //helper preview dropdown background/karakter
-  Uint8List? _getAssetBytes(int? selectedId, List<AssetSceneModel> assetList) {
+  Uint8List? _getAssetBytes(
+    String? selectedId,
+    List<AssetSceneModelFirebase> assetList,
+  ) {
     if (selectedId == null) return null;
+
     try {
-      // Cari asset yang ID-nya cocok, lalu ambil field image-nya
-      final asset = assetList.firstWhere((element) => element.id == selectedId);
-      return asset.image;
-    } catch (e) {
+      final asset = assetList.firstWhere((e) => e.id == selectedId);
+
+      return base64Decode(asset.imageBase64);
+    } catch (_) {
       return null;
     }
   }
@@ -455,13 +464,13 @@ class _SceneCreateFormState extends State<SceneForm> {
 
   // method dropdown background dan karakter
   Widget _buildAssetDropdown({
-    required int? value,
+    required String? value,
     required String hintText,
-    required List<AssetSceneModel> items,
-    required ValueChanged<int?> onChanged,
-    required String? Function(int?)? validator,
+    required List<AssetSceneModelFirebase> items,
+    required ValueChanged<String?> onChanged,
+    required String? Function(String?)? validator,
   }) {
-    return DropdownButtonFormField<int>(
+    return DropdownButtonFormField<String>(
       initialValue: value,
       hint: Text(
         hintText,
@@ -469,7 +478,7 @@ class _SceneCreateFormState extends State<SceneForm> {
       ),
       // Memetakan objek AssetSceneModel ke DropdownMenuItem<int>
       items: items.map((asset) {
-        return DropdownMenuItem<int>(
+        return DropdownMenuItem<String>(
           value: asset.id,
           child: Text(asset.imageName),
         );
@@ -592,10 +601,10 @@ class _SceneCreateFormState extends State<SceneForm> {
     }
 
     //buat object SceneModel
-    final scene = SceneModel(
-      id: widget
-          .scene
-          ?.id, // Jika edit, id lama akan masuk. Jika create, otomatis null.
+    final scene = SceneModelFirebase(
+      // Jika edit, id lama akan masuk. Jika create, otomatis null.
+      id: widget.scene?.id ?? '',
+      sceneOrder: widget.scene?.sceneOrder ?? 0,
       levelId: widget.levelId,
 
       bgImageId: _selectedBackgroundId,

@@ -1,14 +1,14 @@
 import 'package:deebee_user/components/components.dart'; // Sesuaikan import kamu
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/database/preference_handler.dart';
-import 'package:deebee_user/database/repository/user_scene_progress_repository.dart';
+import 'package:deebee_user/database/repository/firebase/user_scene_progress_repository_firebase.dart';
 import 'package:deebee_user/models/enums/home_mode_model.dart';
-import 'package:deebee_user/models/scene_model.dart';
+import 'package:deebee_user/models/scene_model_firebase.dart';
 import 'package:deebee_user/services/gameplay_progress_service.dart';
 import 'package:flutter/material.dart';
 
 class MultipleChoiceInteraction extends StatefulWidget {
-  final SceneModel scene; // Terima data scene aktif
+  final SceneModelFirebase scene; // Terima data scene aktif
   final VoidCallback onNext; // Terima fungsi trigger scene selanjutnya
   final VoidCallback onRefresh; // Terima fungsi trigger refresh 1 halaman
   final HomeMode mode;
@@ -28,7 +28,7 @@ class MultipleChoiceInteraction extends StatefulWidget {
 
 class _MultipleChoiceInteractionState extends State<MultipleChoiceInteraction> {
   //Ambil userId dari SharedPreferences
-  final int? currentUserId = PreferenceHandler.userId;
+  final String? currentUserUid = PreferenceHandler.userUid;
 
   // Simpan status opsi yang dipilih (null berarti belum ada yang dipilih)
   String? _selectedOption;
@@ -43,8 +43,8 @@ class _MultipleChoiceInteractionState extends State<MultipleChoiceInteraction> {
     }
 
     // Var cek apakah scene ini sudah pernah complete
-    final bool alreadyCompleted = await UserSceneProgressRepository()
-        .isSceneCompleted(currentUserId!, widget.scene.id!);
+    final bool alreadyCompleted = await UserSceneProgressRepositoryFirebase()
+        .isSceneCompleted(currentUserUid!, widget.scene.id);
 
     // Ambil kunci jawaban asli dari database (A, B, atau C)
     final String correctKey = widget.scene.answerKeyMultipleChoice ?? '';
@@ -52,7 +52,7 @@ class _MultipleChoiceInteractionState extends State<MultipleChoiceInteraction> {
 
     // Jika jawaban benar: simpan progress dan tambah xp, refresh halaman
     if (isCorrect) {
-      await saveSceneProgress(userId: currentUserId!, scene: widget.scene);
+      await saveSceneProgress(userUid: currentUserUid!, scene: widget.scene);
       widget.onRefresh();
     }
 

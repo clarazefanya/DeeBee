@@ -2,12 +2,12 @@ import 'package:deebee_user/components/components.dart'; // Sesuaikan import kam
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/database/preference_handler.dart';
 import 'package:deebee_user/models/enums/home_mode_model.dart';
-import 'package:deebee_user/models/scene_model.dart';
+import 'package:deebee_user/models/scene_model_firebase.dart';
 import 'package:deebee_user/services/gameplay_progress_service.dart';
 import 'package:flutter/material.dart';
 
 class DialogInteraction extends StatefulWidget {
-  final SceneModel scene; // Terima data scene aktif dari parent
+  final SceneModelFirebase scene; // Terima data scene aktif dari parent
   final VoidCallback onNext; // Terima fungsi trigger scene selanjutnya
   final bool isIntro;
   final HomeMode mode;
@@ -28,7 +28,7 @@ class _DialogInteractionState extends State<DialogInteraction> {
   @override
   Widget build(BuildContext context) {
     //Ambil userId dari SharedPreferences
-    final int? currentUserId = PreferenceHandler.userId;
+    final String? currentUserUid = PreferenceHandler.userUid;
 
     // Ambil kalimat opsional langsung dari object scene database
     final String? kalimatOpsional = widget.scene.optionalSentence;
@@ -62,7 +62,7 @@ class _DialogInteractionState extends State<DialogInteraction> {
             }
 
             await saveSceneProgress(
-              userId: currentUserId!,
+              userUid: currentUserUid!,
               scene: widget.scene,
               isIntro: widget.isIntro,
             );

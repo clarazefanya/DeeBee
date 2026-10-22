@@ -1,11 +1,14 @@
 import 'package:deebee_user/components/components.dart';
 import 'package:deebee_user/constants/colors.dart';
 import 'package:deebee_user/database/preference_handler.dart';
-import 'package:deebee_user/database/repository/user_repository.dart';
+import 'package:deebee_user/database/repository/firebase/user_repository_firebase.dart';
 import 'package:deebee_user/extension/navigator.dart';
-import 'package:deebee_user/models/user_model.dart';
+import 'package:deebee_user/models/user_model_firebase.dart';
+import 'package:deebee_user/utils/firebase_error_helper.dart';
 import 'package:deebee_user/views/auth/login.dart';
 import 'package:deebee_user/views/profile/about_us.dart';
+import 'package:deebee_user/views/profile/update_profile.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -18,20 +21,21 @@ class Profile extends StatefulWidget {
 }
 
 class _ProfileState extends State<Profile> {
+  //Ambil UID
+  final String? currentUserUid = FirebaseAuth.instance.currentUser?.uid;
+  //Panggil repo
+  final _userRepo = UserRepositoryFirebase();
+
   @override
   Widget build(BuildContext context) {
-    //Ambil userId dari SharedPreferences
-    final int? currentUserId = PreferenceHandler.userId;
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: DeebeeAppbar(),
-
       //listview dibungkus FutureBuilder
-      body: FutureBuilder<UserModel?>(
-        // Panggil fungsi getUserById
-        future: currentUserId != null
-            ? UserRepository().getUserById(currentUserId)
+      body: FutureBuilder<UserModelFirebase?>(
+        // Panggil fungsi getUserByUid
+        future: currentUserUid != null
+            ? UserRepositoryFirebase().getUserByUid(currentUserUid!)
             : Future.value(null),
         builder: (context, snapshot) {
           //Kondisi Loading
@@ -197,9 +201,7 @@ class _ProfileState extends State<Profile> {
                                         DateFormat(
                                           'dd MMMM yyyy',
                                           'id_ID',
-                                        ).format(
-                                          DateTime.parse(user.createdAt),
-                                        ),
+                                        ).format(user.createdAt),
                                       ),
                                     ],
                                   ),
@@ -413,13 +415,13 @@ class _ProfileState extends State<Profile> {
                                     backgroundColor: AppColors.primaryHoney,
                                     radius: 16,
                                     child: Icon(
-                                      Icons.settings_outlined,
+                                      Icons.person_outline_rounded,
                                       color: AppColors.primaryBlack,
                                       size: 20,
                                     ),
                                   ),
                                   title: const Text(
-                                    'Pengaturan',
+                                    'Update Profile',
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
@@ -429,16 +431,18 @@ class _ProfileState extends State<Profile> {
                                     Icons.chevron_right,
                                     // color: Colors.grey,
                                   ),
-                                  onTap: () {
-                                    // Aksi saat ditekan
-                                    //blm tersedia
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          "Fitur ini belum tersedia pada MVP",
-                                        ),
+                                  onTap: () async {
+                                    // ke halaman update profile
+                                    final result = await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => const UpdateProfile(),
                                       ),
                                     );
+
+                                    if (result == true) {
+                                      setState(() {});
+                                    }
                                   },
                                 ),
 
@@ -565,7 +569,7 @@ class _ProfileState extends State<Profile> {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
                                         content: Text(
-                                          "Fitur ini belum tersedia pada MVP",
+                                          "Fitur ini belum tersedia.",
                                         ),
                                       ),
                                     );
@@ -599,15 +603,15 @@ class _ProfileState extends State<Profile> {
                                       ).showSnackBar(
                                         const SnackBar(
                                           content: Text(
-                                            'Akun admin tidak dapat dihapus',
+                                            'Akun admin tidak dapat dihapus.',
                                           ),
                                         ),
                                       );
                                       return;
                                     }
 
-                                    if (currentUserId != null) {
-                                      confirmDeleteAccount(currentUserId);
+                                    if (currentUserUid != null) {
+                                      confirmDeleteAccount(currentUserUid!);
                                     }
                                   },
                                 ),
@@ -631,6 +635,7 @@ class _ProfileState extends State<Profile> {
                               vertical: 12,
                             ),
                           ),
+                          onPressed: _confirmLogout,
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -648,16 +653,6 @@ class _ProfileState extends State<Profile> {
                               ),
                             ],
                           ),
-                          onPressed: () async {
-                            //logic logout
-                            await PreferenceHandler.logOut();
-                            if (!context.mounted) return;
-                            context.pushAndRemoveAll(Login());
-                            // snackbar
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("Berhasil Logout")),
-                            );
-                          },
                         ),
                       ],
                     ),
@@ -684,7 +679,7 @@ class _ProfileState extends State<Profile> {
   }
 
   //function tombol hapus akun
-  void confirmDeleteAccount(int userId) {
+  void confirmDeleteAccount(String uid) {
     //tampilkan dialog konfirmasi
     showDialog(
       context: context,
@@ -703,17 +698,35 @@ class _ProfileState extends State<Profile> {
             // Tombol Ya
             TextButton(
               onPressed: () async {
-                Navigator.pop(dialogContext); // Tutup dialog dulu
+                final messenger = ScaffoldMessenger.of(context);
 
-                // Jalankan fungsi delete
-                await UserRepository().deleteUser(userId);
-                await PreferenceHandler.logOut();
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Berhasil menghapus akun")),
-                );
+                Navigator.pop(dialogContext);
 
-                context.pushReplacement(Login());
+                try {
+                  await _userRepo.deleteUserCascade(uid);
+
+                  await PreferenceHandler.logOut();
+
+                  if (!mounted) return;
+
+                  messenger.showSnackBar(
+                    const SnackBar(content: Text("Akun berhasil dihapus")),
+                  );
+
+                  context.pushReplacement(Login());
+                } on FirebaseAuthException catch (e) {
+                  if (!mounted) return;
+
+                  messenger.showSnackBar(
+                    SnackBar(content: Text(firebaseAuthErrorMessage(e))),
+                  );
+                } catch (e) {
+                  if (!mounted) return;
+
+                  messenger.showSnackBar(
+                    SnackBar(content: Text("Terjadi kesalahan: $e")),
+                  );
+                }
               },
               style: TextButton.styleFrom(foregroundColor: Colors.red),
               child: const Text("Ya, Hapus"),
@@ -722,5 +735,41 @@ class _ProfileState extends State<Profile> {
         );
       },
     );
+  }
+
+  //funtion local konfirmasi logout
+  Future<void> _confirmLogout() async {
+    final isLogout = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text("Konfirmasi Keluar"),
+          content: const Text("Apakah Anda yakin ingin keluar dari akun ini?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text("Batal"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text("Keluar", style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (isLogout != true) return;
+
+    await FirebaseAuth.instance.signOut();
+    await PreferenceHandler.logOut();
+
+    if (!mounted) return;
+
+    context.pushAndRemoveAll(Login());
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text("Berhasil logout")));
   }
 }
