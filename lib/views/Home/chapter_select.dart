@@ -144,8 +144,13 @@ class _ChapterSelectState extends State<ChapterSelect> {
                           future: _getChapterData(chapter.id),
                           builder: (context, snapshot) {
                             if (!snapshot.hasData) {
-                              return const SizedBox.shrink();
+                              return const Center(
+                                child: CircularProgressIndicator(),
+                              );
                             }
+                            // if (!snapshot.hasData) {
+                            //   return const SizedBox.shrink();
+                            // }
 
                             final status =
                                 snapshot.data!['status'] as ProgressStatus;
